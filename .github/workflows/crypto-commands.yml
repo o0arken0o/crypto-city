@@ -1,0 +1,44 @@
+name: Crypto commands
+# Remote control: issues titled "mm: ..." opened by the repo OWNER, containing a ```json {op,args}``` block,
+# are applied to the Crypto Machine state (the dashboard creates these issues for you).
+# Every run sweeps ALL open command issues, so a run cancelled by the concurrency group loses nothing.
+# Commands older than 24 h are closed without being applied (they would overwrite newer settings).
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: mm-state
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.event_name == 'workflow_dispatch' || (startsWith(github.event.issue.title, 'mm:') && github.event.issue.author_association == 'OWNER')
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Apply pending commands
+        run: python3 scripts/apply_issues.py apply | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Run approved actions (go-live / stop of strategies, site pages, LinkedIn)
+        env:
+          MM_SITE_URL: ${{ vars.MM_SITE_URL }}
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}  # set by the panel (Collega LinkedIn); without it LinkedIn posts wait
+          LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+        run: python3 scripts/actions.py run-approved | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Commit
+        run: |
+          git config user.name "crypto-machine[bot]"
+          git config user.email "crypto-machine@users.noreply.github.com"
+          git add -A state products site
+          git diff --cached --quiet && exit 0
+          git commit -m "mm: comandi dalla plancia"
+          ok=0; for i in 1 2 3; do git pull --rebase -X theirs && git push && { ok=1; break; }; sleep $((i*3)); done; [ "$ok" = 1 ]
+      - name: Reply and close issues
+        run: python3 scripts/apply_issues.py close

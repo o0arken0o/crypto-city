@@ -1,0 +1,247 @@
+{
+ "date": "2026-10-05",
+ "stable": [
+  {
+   "project": "saturn",
+   "chain": "Ethereum",
+   "symbol": "SUSDAT",
+   "apy_30d": 14.45,
+   "apy_base": 12.14327,
+   "apy_reward": null,
+   "tvl_musd": 66.7,
+   "pool": "47e72726-3b2b-4fe6-b4a9-a26e1fcd9a50"
+  },
+  {
+   "project": "apyx-protocol",
+   "chain": "Ethereum",
+   "symbol": "APXUSD",
+   "apy_30d": 12.71,
+   "apy_base": 13.30303,
+   "apy_reward": null,
+   "tvl_musd": 164.9,
+   "pool": "cb6139f9-4a68-4efd-8245-0312a92aee55"
+  },
+  {
+   "project": "accountable",
+   "chain": "Monad",
+   "symbol": "USDC",
+   "apy_30d": 11.73,
+   "apy_base": 11.4,
+   "apy_reward": 0.45219,
+   "tvl_musd": 75.0,
+   "pool": "1a9c61c7-4094-4ee7-8d46-6ea8fb5689f1"
+  },
+  {
+   "project": "pendle-v2",
+   "chain": "Arbitrum",
+   "symbol": "USDAI",
+   "apy_30d": 9.56,
+   "apy_base": 10.99865,
+   "apy_reward": null,
+   "tvl_musd": 50.4,
+   "pool": "2785c8d0-348b-4e8f-904e-4b02819993b9"
+  },
+  {
+   "project": "dolomite",
+   "chain": "Ethereum",
+   "symbol": "USD1",
+   "apy_30d": 8.09,
+   "apy_base": 2.70023,
+   "apy_reward": 4.95234,
+   "tvl_musd": 87.5,
+   "pool": "86e18974-35ca-4948-9c82-694facf9d082"
+  },
+  {
+   "project": "fx-protocol",
+   "chain": "Ethereum",
+   "symbol": "FXUSDSTABILITYPOOLV2.0",
+   "apy_30d": 8.08,
+   "apy_base": null,
+   "apy_reward": null,
+   "tvl_musd": 85.2,
+   "pool": "abd6c9e1-3b52-459a-a31b-9022a4dcf7e2"
+  },
+  {
+   "project": "morpho-blue",
+   "chain": "Ethereum",
+   "symbol": "SENPYUSDPST",
+   "apy_30d": 7.95,
+   "apy_base": 5.48854,
+   "apy_reward": 2.38446,
+   "tvl_musd": 69.6,
+   "pool": "d437f7b3-09ba-5450-be41-d2b7d0e9406d"
+  },
+  {
+   "project": "avant-avusd",
+   "chain": "Avalanche",
+   "symbol": "SAVUSD",
+   "apy_30d": 7.89,
+   "apy_base": 7.6911,
+   "apy_reward": null,
+   "tvl_musd": 104.8,
+   "pool": "c74227a1-e738-4021-bbe1-13363815aecb"
+  },
+  {
+   "project": "pareto-credit",
+   "chain": "Ethereum",
+   "symbol": "USDC",
+   "apy_30d": 7.84,
+   "apy_base": 8.06349,
+   "apy_reward": null,
+   "tvl_musd": 124.2,
+   "pool": "2eb2bdf8-c3e3-5b30-8d49-8d5232294184"
+  },
+  {
+   "project": "midas-rwa",
+   "chain": "Ethereum",
+   "symbol": "USDC",
+   "apy_30d": 7.55,
+   "apy_base": 7.57,
+   "apy_reward": null,
+   "tvl_musd": 65.7,
+   "pool": "7d491f26-a03b-4eca-ae2c-e068391b15d3"
+  },
+  {
+   "project": "sentora-curator",
+   "chain": "Ethereum",
+   "symbol": "USDC",
+   "apy_30d": 7.45,
+   "apy_base": 7.70379,
+   "apy_reward": null,
+   "tvl_musd": 94.4,
+   "pool": "f4200c7d-d3fd-5b88-9398-ba66eac63a03"
+  },
+  {
+   "project": "usd-ai",
+   "chain": "Arbitrum",
+   "symbol": "SUSDAI",
+   "apy_30d": 7.11,
+   "apy_base": 6.97,
+   "apy_reward": null,
+   "tvl_musd": 535.4,
+   "pool": "712ce948-bd9e-4f4a-8916-b72c447f7578"
+  }
+ ],
+ "majors": [
+  {
+   "project": "jupiter-staked-sol",
+   "chain": "Solana",
+   "symbol": "JUPSOL",
+   "apy_30d": 5.43,
+   "apy_base": 5.47017,
+   "apy_reward": null,
+   "tvl_musd": 629.0,
+   "pool": "52bd72a7-9e81-4112-abb4-71673e8de9bf"
+  },
+  {
+   "project": "marinade-liquid-staking",
+   "chain": "Solana",
+   "symbol": "MSOL",
+   "apy_30d": 5.21,
+   "apy_base": 4.75963,
+   "apy_reward": null,
+   "tvl_musd": 274.1,
+   "pool": "b3f93865-5ec8-4662-90a0-11808e0aa2bd"
+  },
+  {
+   "project": "helius-staked-sol",
+   "chain": "Solana",
+   "symbol": "HSOL",
+   "apy_30d": 5.19,
+   "apy_base": 5.04168,
+   "apy_reward": null,
+   "tvl_musd": 115.5,
+   "pool": "d7e101d6-8e6c-4348-9c5f-62398872a301"
+  },
+  {
+   "project": "drift-staked-sol",
+   "chain": "Solana",
+   "symbol": "DSOL",
+   "apy_30d": 5.09,
+   "apy_base": 4.98554,
+   "apy_reward": null,
+   "tvl_musd": 343.1,
+   "pool": "296651fc-25f6-4434-b8ec-17c2af9808da"
+  },
+  {
+   "project": "dfdv-staked-sol",
+   "chain": "Solana",
+   "symbol": "DFDVSOL",
+   "apy_30d": 4.99,
+   "apy_base": 4.95856,
+   "apy_reward": null,
+   "tvl_musd": 222.7,
+   "pool": "568bbb48-dc88-4313-b1cc-ab1d4e763d6d"
+  },
+  {
+   "project": "jpool",
+   "chain": "Solana",
+   "symbol": "JSOL",
+   "apy_30d": 4.9,
+   "apy_base": 4.8323,
+   "apy_reward": null,
+   "tvl_musd": 150.2,
+   "pool": "177d0a37-d0fb-4b18-b290-f46bbe8d307f"
+  },
+  {
+   "project": "bybit-staked-sol",
+   "chain": "Solana",
+   "symbol": "BBSOL",
+   "apy_30d": 4.84,
+   "apy_base": 4.73,
+   "apy_reward": null,
+   "tvl_musd": 166.3,
+   "pool": "f76cc844-73a2-4cc7-8de7-f9fb874c626d"
+  },
+  {
+   "project": "the-vault-liquid-staking",
+   "chain": "Solana",
+   "symbol": "VSOL",
+   "apy_30d": 4.84,
+   "apy_base": 4.80058,
+   "apy_reward": null,
+   "tvl_musd": 161.9,
+   "pool": "8b46fdde-a5e4-4574-9926-6ba8047f4fca"
+  },
+  {
+   "project": "jito-liquid-staking",
+   "chain": "Solana",
+   "symbol": "JITOSOL",
+   "apy_30d": 4.83,
+   "apy_base": 4.91,
+   "apy_reward": null,
+   "tvl_musd": 1266.5,
+   "pool": "0e7d0722-9054-4907-8593-567b353c0900"
+  },
+  {
+   "project": "blazestake",
+   "chain": "Solana",
+   "symbol": "BSOL",
+   "apy_30d": 4.8,
+   "apy_base": 4.73795,
+   "apy_reward": null,
+   "tvl_musd": 110.2,
+   "pool": "387d6732-59f0-4ae0-8a88-aba75a5cbe4a"
+  },
+  {
+   "project": "fluid-lite",
+   "chain": "Ethereum",
+   "symbol": "ETH",
+   "apy_30d": 4.71,
+   "apy_base": null,
+   "apy_reward": null,
+   "tvl_musd": 211.0,
+   "pool": "e72916f7-a2d1-47ad-a4b9-2b054337cfd6"
+  },
+  {
+   "project": "doublezero-staked-sol",
+   "chain": "Solana",
+   "symbol": "DZSOL",
+   "apy_30d": 4.6,
+   "apy_base": 4.55244,
+   "apy_reward": null,
+   "tvl_musd": 84.7,
+   "pool": "3997db8b-3f0c-4774-985d-d9fed3978f53"
+  }
+ ]
+}

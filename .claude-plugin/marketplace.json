@@ -1,0 +1,14 @@
+{
+  "name": "crypto-machine-marketplace",
+  "description": "Crypto Machine: agenti crypto prudenti con backtest, paper trading, segnali e plancia di controllo.",
+  "owner": {
+    "name": "reveracontatti-create"
+  },
+  "plugins": [
+    {
+      "name": "crypto-machine",
+      "source": "./",
+      "description": "CEO + team trading, rendite e social: strategie crypto testate prima di usare soldi veri, con approvazione umana."
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Short entry point for the Crypto Machine engine: `mm brief`, `mm opp '{...}'`, ...
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec python3 "$DIR/../engine/mm.py" "$@"

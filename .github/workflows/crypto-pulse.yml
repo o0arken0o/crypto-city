@@ -1,0 +1,70 @@
+name: Crypto pulse
+# Ogni ora, giorno e notte (le crypto non chiudono mai): fa un passo di paper trading per ogni strategia
+# (prezzi veri, soldi finti), registra i SEGNALI delle strategie live approvate e li manda su Telegram.
+# Niente AI, niente costi: meno di un minuto. Nessun ordine viene mai inviato a un exchange.
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+    inputs:
+      auto:
+        description: "Avvio automatico dalla plancia all'orario previsto (non toccare)"
+        required: false
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: mm-state
+  cancel-in-progress: false
+
+jobs:
+  gate:  # a cron run is a backup of the panel's autostart: skip it if this workflow already started recently
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.g.outputs.go }}
+    steps:
+      - id: g
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          go=1
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            since=$(date -u -d "-40 minutes" +%Y-%m-%dT%H:%M:%SZ)
+            n=$(gh api "repos/${{ github.repository }}/actions/workflows/crypto-pulse.yml/runs?per_page=10" \
+                  --jq "[.workflow_runs[] | select(.id != ${{ github.run_id }} and .created_at >= \"$since\")] | length" || echo 0)
+            [ "${n:-0}" -gt 0 ] && go=0 && echo "già avviato negli ultimi 40 minuti: salto"
+          fi
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+  pulse:
+    needs: gate
+    if: needs.gate.outputs.go == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Site traffic from the online panel (visits, clicks; no cookies)
+        env:
+          MM_TRAFFIC_URL: ${{ secrets.MM_TRAFFIC_URL }}
+          MM_TRAFFIC_KEY: ${{ secrets.MM_TRAFFIC_KEY }}
+        run: python3 scripts/traffic_sync.py
+      - name: Tools for the paper trading charts
+        run: python3 -m pip install --quiet --user --break-system-packages pillow || echo "Pillow non installato"
+      - name: Paper trading and live signals (public prices, no keys, no AI)
+        if: vars.MM_PAPER_ENABLED != 'false'
+        run: python3 scripts/paper.py run
+      - name: Telegram alerts
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          MM_SITE_URL: ${{ vars.MM_SITE_URL }}
+        run: python3 scripts/telegram.py
+      - name: Commit state
+        run: |
+          git config user.name "crypto-machine[bot]"
+          git config user.email "crypto-machine@users.noreply.github.com"
+          git add -A state products
+          git diff --cached --quiet && exit 0
+          git commit -m "mm: pulse $(date -u +%FT%TZ)"
+          ok=0; for i in 1 2 3; do git pull --rebase -X theirs && git push && { ok=1; break; }; sleep $((i*3)); done; [ "$ok" = 1 ]

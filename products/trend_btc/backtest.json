@@ -1,0 +1,57 @@
+{
+ "pair": "BTC-USD",
+ "timeframe": "1d",
+ "params": {
+  "fast": 50,
+  "slow": 200
+ },
+ "candles": 1499,
+ "from": "2022-08-27",
+ "to": "2026-10-03",
+ "split": "2025-07-11",
+ "costs": {
+  "fee": 0.001,
+  "slippage": 0.0005
+ },
+ "full": {
+  "return": 0.2495,
+  "max_dd": 0.4116,
+  "sharpe": 0.33,
+  "cagr": 0.0558
+ },
+ "in_sample": {
+  "return": 0.4588,
+  "max_dd": 0.4052,
+  "sharpe": 0.58,
+  "cagr": 0.1404
+ },
+ "out_of_sample": {
+  "return": -0.1435,
+  "max_dd": 0.2719,
+  "sharpe": -0.63,
+  "cagr": -0.1183
+ },
+ "buy_hold": {
+  "return": 3.2294,
+  "max_dd": 0.5308,
+  "sharpe": 0.98,
+  "cagr": 0.421
+ },
+ "buy_hold_oos": {
+  "return": -0.2793,
+  "max_dd": 0.5308,
+  "sharpe": -0.42,
+  "cagr": -0.2338
+ },
+ "trades": 55,
+ "time_in_market": 0.386,
+ "checks": {
+  "oos_guadagna": false,
+  "oos_sharpe": false,
+  "drawdown": false,
+  "operazioni": true,
+  "meno_rischio_del_hold": true
+ },
+ "verdict": "FAIL",
+ "ran": "2026-10-04T15:15:31Z"
+}

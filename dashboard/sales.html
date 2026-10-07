@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050a18">
+<title>Sala rendite Crypto Machine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{"imports":{"three":"./vendor/three/three.module.min.js",
+            "three/addons/":"./vendor/three/addons/"}}
+</script>
+</head>
+<body>
+<script type="module">
+// Yield room ("sala rendite"), exchange look (shared shell in exchange.js). In the middle a holographic coin surrounded
+// by columns of light: one per real yield found by the team (DefiLlama via scripts/yields.py), height = 30-day APY.
+// Left wall: the team's research notes and what waits for the owner. The team only proposes: the owner decides.
+import { createRoom, THREE, BLUE, CYAN, GOLD, glow, canvasTex, label, eur, DEMO } from "./exchange.js";
+import { CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+const AGENTS = [
+  ["yield-lead", "Yield Lead", 0x9b7bff], ["yield-scout", "Yield Scout", 0x3aa0ff], ["airdrop-scout", "Airdrop Scout", 0x2fd59b],
+  ["portfolio-analyst", "Portafoglio", 0xffc35a], ["ethics-guard", "Etica", 0xff6b81],
+];
+const room = createRoom({
+  team: "rendite", sub: "Sala rendite", lead: "yield-lead", agents: AGENTS, reportTitle: "Ultimo resoconto del team rendite",
+  spots: [[-6.2, -9.4, Math.PI], [-2.2, -9.4, Math.PI], [5.4, -9.4, Math.PI], [-11.4, -4.4, -Math.PI / 2], [-11.4, .2, -Math.PI / 2]],
+  cron: [47, [23]],  // keep in sync with .github/workflows/crypto-rendite.yml
+  kv: [["kRev", "Risultati reali"], ["kAi", "Budget AI oggi", true], ["kYield", "Rendimenti trovati"], ["kApr", "Proposte da decidere"]],
+  nav: [["office.html", "Sala trading"], ["/plancia", "Plancia"]],
+  world, demo,
+});
+const { scene, screen, showCard, XW } = room;
+const $ = s => document.querySelector(s);
+
+// ---------------------------------------------------------------- left wall: research notes and "tocca a te"
+function listTex(title, accent) {
+  const tex = canvasTex(900, 640, () => {});
+  tex.userData.draw = rows => {
+    const c = tex.userData.canvas, g = c.getContext("2d"), w = c.width, h = c.height;
+    g.fillStyle = "#030918"; g.fillRect(0, 0, w, h);
+    g.fillStyle = accent; g.shadowColor = accent; g.shadowBlur = 14; g.font = "700 40px Chakra Petch, sans-serif"; g.fillText(title, 32, 62); g.shadowBlur = 0;
+    g.font = "500 30px Nunito Sans, sans-serif";
+    (rows.length ? rows : ["— niente per ora —"]).slice(0, 9).forEach((r, i) => {
+      g.fillStyle = i % 2 ? "rgba(86,160,255,.06)" : "rgba(86,160,255,.12)"; g.fillRect(24, 92 + i * 58, w - 48, 52);
+      g.fillStyle = rows.length ? "#e6efff" : "#8ea3c8"; g.fillText(String(r).slice(0, 48), 40, 128 + i * 58);
+    });
+    tex.needsUpdate = true;
+  };
+  tex.userData.draw([]);
+  return tex;
+}
+const notesTex = listTex("NOTE DI RICERCA DEL TEAM", "#4fd2ff"), todoTex = listTex("PROPOSTE · TOCCA A TE", "#ffc35a");
+screen(4.6, 3.3, notesTex, XW + .05, 3.6, -6.2, Math.PI / 2);
+screen(4.6, 3.3, todoTex, XW + .05, 3.6, -.8, Math.PI / 2);
+screen(3.4, 2, canvasTex(700, 420, (g, w, h) => {  // explains the columns
+  g.fillStyle = "#030918"; g.fillRect(0, 0, w, h); g.fillStyle = "#cfe3ff"; g.font = "600 30px Chakra Petch, sans-serif"; g.fillText("COME LEGGERE LE COLONNE", 24, 50);
+  g.font = "500 26px Nunito Sans, sans-serif"; g.fillStyle = "#8ea3c8";
+  ["Ogni colonna = un rendimento reale (DefiLlama)", "Altezza = APY medio a 30 giorni", "Argento = stablecoin · oro = crypto principali", "Il team propone, decidi tu"].forEach((t, i) => g.fillText(t, 24, 120 + i * 62));
+}), 8.8, 4.2, room.ZW + .05, 0);
+
+// ---------------------------------------------------------------- centre: holographic coin and the yield columns
+const centre = new THREE.Group(); scene.add(centre);
+const ped = new THREE.MeshStandardMaterial({ color: 0x0b1733, metalness: .85, roughness: .25 });
+{
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.4, .5, 64), ped); base.position.y = .25; centre.add(base);
+  for (const [r, y] of [[2.22, .5], [6.2, .02], [6.4, .02]]) { const ring = new THREE.Mesh(new THREE.TorusGeometry(r, r > 3 ? .025 : .03, 8, 128), glow(r > 6.3 ? CYAN : BLUE)); ring.rotation.x = Math.PI / 2; ring.position.y = y; centre.add(ring); }
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.7, 1.6, 48, 1, true), new THREE.MeshBasicMaterial({ color: BLUE, transparent: true, opacity: .1, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
+  beam.position.y = 1.3; centre.add(beam);
+}
+const coinFace = canvasTex(512, 512, (g, w, h) => {
+  const gr = g.createRadialGradient(w / 2, h / 2, 40, w / 2, h / 2, 250); gr.addColorStop(0, "#123a7a"); gr.addColorStop(1, "#061633");
+  g.fillStyle = gr; g.beginPath(); g.arc(w / 2, h / 2, 250, 0, 7); g.fill();
+  g.strokeStyle = "#4fd2ff"; g.lineWidth = 12; g.beginPath(); g.arc(w / 2, h / 2, 236, 0, 7); g.stroke(); g.lineWidth = 3; g.beginPath(); g.arc(w / 2, h / 2, 200, 0, 7); g.stroke();
+  g.font = "700 230px Chakra Petch, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#cfe9ff"; g.shadowColor = "#3aa0ff"; g.shadowBlur = 30; g.fillText("%", w / 2, h / 2 + 10);
+});
+const coinFaceM = new THREE.MeshBasicMaterial({ map: coinFace, toneMapped: false, transparent: true, opacity: .92 });
+const coin = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, .22, 64), [new THREE.MeshStandardMaterial({ color: 0x1a4a9a, emissive: 0x0d2a66, metalness: .9, roughness: .2 }), coinFaceM, coinFaceM]);
+coin.rotation.x = Math.PI / 2; coin.position.y = 3.3; centre.add(coin);
+const coinLight = new THREE.PointLight(BLUE, 10, 10, 2); coinLight.position.set(0, 3.3, 0); scene.add(coinLight);
+const halo = new THREE.Mesh(new THREE.SphereGeometry(2.3, 40, 24), new THREE.MeshBasicMaterial({ color: BLUE, transparent: true, opacity: .07, side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false }));
+halo.position.y = 3.3; centre.add(halo);
+
+const columns = new THREE.Group(); scene.add(columns);
+const colGeo = new THREE.CylinderGeometry(.42, .42, 1, 32, 1, true), capGeo = new THREE.CylinderGeometry(.45, .45, .06, 32);
+// ?stile=4 towers of coins (default) · 1 ring of light columns · 2 3D ranking (bars sorted by APY, risk colours) · 3 coins orbiting the centre
+const STILE = new URLSearchParams(location.search).get("stile") || "4";
+const short = p => String(p.title).split(" · ").pop();
+const apyTxt = (v, d = 1) => (+v).toFixed(d).replace(".", ",") + "%";
+const RISK_HEX = { "#ff4d6a": 0xff4d6a, "#ffb020": 0xffb020, "#2fd59b": 0x2fd59b };
+let yieldSig = "", orbit = null, bubbles = [];
+const seededR = s0 => { let x = s0 * 9301 + 49297; return () => (x = (x * 16807) % 2147483647) / 2147483647; };
+let envDone = false;
+function envOn() {  // reflections for metal and glass (styles 4 and 6)
+  if (envDone) return; envDone = true;
+  const pm = new THREE.PMREMGenerator(room.renderer); scene.environment = pm.fromScene(new RoomEnvironment(), .04).texture; scene.environmentIntensity = .55; pm.dispose();
+}
+function clearColumns() {  // CSS2D labels are DOM elements: remove them too, or they stay on screen
+  columns.traverse(o => { if (o.isCSS2DObject) o.element.remove(); });
+  columns.clear(); orbit = null; bubbles = [];
+}
+function yieldCard(p) {
+  const [, risk] = riskOf(p);
+  showCard(p.title, [["APY 30 giorni", apyTxt(p.apy, 2)], ["Di cui premi", p.reward ? apyTxt(p.reward, 2) : "—"], ["Rete", p.chain || "—"],
+    ["Depositi (TVL)", p.tvl_musd ? `${Math.round(p.tvl_musd)} milioni $` : "—"], ["Rischio (automatico)", risk], ["Dati del", p.date || "—"]],
+    `<div class="small muted">Dato pubblico, non una proposta. Il team propone una mossa solo con rischi e uscita scritti, e decidi tu.</div>`);
+}
+function chip(p) {  // label: name, APY and a risk dot
+  const [c] = riskOf(p), el = document.createElement("div"); el.className = "lbl";
+  el.innerHTML = `<span style="color:${c}">●</span> ${short(p)} <b>${apyTxt(p.apy)}</b>`; return new CSS2DObject(el);
+}
+function setYields(products) {
+  const list = (products || []).filter(p => p.apy != null).slice(0, 8);
+  const sig = STILE + JSON.stringify(list.map(p => [p.title, p.apy]));
+  if (sig === yieldSig) return;  // same data: keep the scene as it is
+  yieldSig = sig; clearColumns();
+  const n = Math.max(list.length, 1), maxApy = Math.max(6, ...list.map(p => +p.apy || 0));
+  if (STILE === "2") {  // 3D ranking: solid bars in a row in front of the coin, tallest first, coloured by risk
+    list.slice().sort((a, b) => b.apy - a.apy).forEach((p, i) => {
+      const hgt = .3 + (+p.apy / maxApy) * 4, x = -6.3 + i * 1.8, col = RISK_HEX[riskOf(p)[0]];
+      const g = new THREE.Group(); g.position.set(x, 0, 5.2); columns.add(g);
+      const pad = new THREE.Mesh(new THREE.BoxGeometry(1.4, .12, 1.4), ped); pad.position.y = .06; g.add(pad);
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(1, hgt, 1), new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: .35, transparent: true, opacity: .8, metalness: .3, roughness: .3 }));
+      bar.position.y = .12 + hgt / 2; g.add(bar);
+      const edge = new THREE.LineSegments(new THREE.EdgesGeometry(bar.geometry), new THREE.LineBasicMaterial({ color: col, toneMapped: false })); edge.position.copy(bar.position); g.add(edge);
+      const top = new CSS2DObject(Object.assign(document.createElement("div"), { className: "lbl", textContent: apyTxt(p.apy) })); top.position.y = hgt + .55; g.add(top);
+      const plate = canvasTex(512, 160, (c, w, h) => { c.fillStyle = "#061430"; c.fillRect(0, 0, w, h); c.font = "700 54px Chakra Petch, sans-serif"; c.textAlign = "center"; c.fillStyle = "#e6efff"; c.fillText(short(p).slice(0, 12), w / 2, 70); c.font = "600 34px Chakra Petch, sans-serif"; c.fillStyle = "#8ea3c8"; c.fillText(`#${i + 1} · ${p.chain || ""}`.slice(0, 22), w / 2, 128); });
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(1.5, .47), new THREE.MeshBasicMaterial({ map: plate, toneMapped: false })); pl.rotation.x = -Math.PI / 2; pl.position.set(0, .13, 1.05); g.add(pl);
+      g.userData.onClick = () => yieldCard(p);
+    });
+    return;
+  }
+  if (STILE === "3") {  // coins orbiting the central coin: size = APY, colour = risk, APY written on the face
+    orbit = new THREE.Group(); orbit.position.y = 3.2; columns.add(orbit);
+    list.forEach((p, i) => {
+      const a = i / n * Math.PI * 2, r = .45 + (+p.apy / maxApy) * .55, [c] = riskOf(p);
+      const face = canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#081a3e"; g.beginPath(); g.arc(w / 2, h / 2, 124, 0, 7); g.fill(); g.strokeStyle = c; g.lineWidth = 12; g.stroke();
+        g.textAlign = "center"; g.fillStyle = "#fff"; g.font = "700 64px Chakra Petch, sans-serif"; g.fillText(apyTxt(p.apy), w / 2, h / 2 + 4); g.fillStyle = c; g.font = "600 34px Chakra Petch, sans-serif"; g.fillText(short(p).slice(0, 9), w / 2, h / 2 + 52); });
+      const fm = new THREE.MeshBasicMaterial({ map: face, toneMapped: false });
+      const coinM = new THREE.Mesh(new THREE.CylinderGeometry(r, r, .1, 40), [new THREE.MeshStandardMaterial({ color: 0x1b2b50, metalness: .9, roughness: .2 }), fm, fm]);
+      const holder = new THREE.Group(); holder.position.set(Math.cos(a) * 4.6, Math.sin(i * 1.7) * .5, Math.sin(a) * 4.6); orbit.add(holder);
+      coinM.rotation.set(Math.PI / 2, Math.PI / 2, 0); holder.add(coinM); holder.userData.onClick = () => yieldCard(p);
+    });
+    return;
+  }
+  if (STILE === "4") {  // towers of real-looking coins on an arc: one coin every 0,5% of APY, gold = staking, silver = stablecoin
+    envOn();
+    const sorted = list.slice().sort((a, b) => b.apy - a.apy);
+    sorted.forEach((p, i) => {
+      const a = Math.PI * (.15 + i / Math.max(sorted.length - 1, 1) * .7), x = -Math.cos(a) * 6, z = Math.sin(a) * 4.2 + 1;
+      const g = new THREE.Group(); g.position.set(x, 0, z); columns.add(g);
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(.7, .78, .16, 48), new THREE.MeshStandardMaterial({ color: 0x0d1a36, metalness: .9, roughness: .2 })); base.position.y = .08; g.add(base);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(.74, .015, 6, 64), glow(RISK_HEX[riskOf(p)[0]])); ring.rotation.x = Math.PI / 2; ring.position.y = .165; g.add(ring);
+      const metal = p.kind === "stablecoin" ? new THREE.MeshStandardMaterial({ color: 0xd8e2f0, metalness: 1, roughness: .22 }) : new THREE.MeshStandardMaterial({ color: 0xe8b24a, metalness: 1, roughness: .25 });
+      const n = Math.min(40, Math.max(2, Math.round(+p.apy * 2))), r = seededR(i + 3);
+      const coins = new THREE.InstancedMesh(new THREE.CylinderGeometry(.42, .42, .075, 40), metal, n), m = new THREE.Object3D();
+      for (let k = 0; k < n; k++) { m.position.set((r() - .5) * .05, .2 + k * .078, (r() - .5) * .05); m.rotation.set((r() - .5) * .04, r() * 6, (r() - .5) * .04); m.updateMatrix(); coins.setMatrixAt(k, m.matrix); }
+      g.add(coins);
+      const lab = chip(p); lab.position.y = .45 + n * .078; g.add(lab);
+      g.userData.onClick = () => yieldCard(p);
+    });
+    return;
+  }
+  if (STILE === "5") {  // a big curved holographic screen behind the coin with the whole list, like a trading floor wall
+    const W = 2400, Hh = 900, tex = canvasTex(W, Hh, (c) => {
+      c.fillStyle = "rgba(3,12,32,.92)"; c.fillRect(0, 0, W, Hh);
+      c.strokeStyle = "rgba(79,180,255,.5)"; c.lineWidth = 4; c.strokeRect(6, 6, W - 12, Hh - 12);
+      c.fillStyle = "#4fb3ff"; c.font = "700 64px Chakra Petch, sans-serif"; c.fillText("RENDIMENTI DI OGGI · DEFILLAMA", 50, 90);
+      c.fillStyle = "#8ea3c8"; c.font = "600 34px Chakra Petch, sans-serif"; ["RENDIMENTO", "RETE", "APY 30 GIORNI", "DEPOSITI", "RISCHIO"].forEach((h, i) => c.fillText(h, [50, 640, 980, 1700, 2010][i], 160));
+      list.slice().sort((a, b) => b.apy - a.apy).forEach((p, j) => {
+        const y = 240 + j * 82, [rc, rl] = riskOf(p); c.fillStyle = j % 2 ? "rgba(86,160,255,.06)" : "rgba(86,160,255,.13)"; c.fillRect(30, y - 56, W - 60, 76);
+        c.fillStyle = "#e6efff"; c.font = "700 44px Chakra Petch, sans-serif"; c.fillText(String(p.title).slice(0, 24), 50, y);
+        c.fillStyle = "#cfe3ff"; c.font = "600 38px Chakra Petch, sans-serif"; c.fillText(p.chain || "—", 640, y);
+        const bw = (+p.apy / maxApy) * 520; c.fillStyle = p.kind === "stablecoin" ? "#4fd2ff" : "#b48cff"; c.fillRect(980, y - 36, bw, 40); c.fillStyle = "#fff"; c.fillText(apyTxt(p.apy), 1000 + bw, y);
+        c.fillStyle = "#cfe3ff"; c.fillText(p.tvl_musd ? Math.round(p.tvl_musd) + " M$" : "—", 1700, y);
+        c.fillStyle = rc; c.beginPath(); c.arc(2030, y - 14, 20, 0, 7); c.fill(); c.font = "600 36px Chakra Petch, sans-serif"; c.fillText(rl, 2065, y);
+      });
+    });
+    // curved screen standing behind the coin (camera side looks at its inside), raised above the desks
+    const arc = Math.PI * .7, R = 8.6, scr = new THREE.Group(); scr.position.set(0, 0, 2.5); columns.add(scr);
+    const wall = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 3.4, 96, 1, true, Math.PI - arc / 2, arc),
+      new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, transparent: true, opacity: .97, toneMapped: false }));
+    tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = -1; tex.offset.x = 1;  // read correctly from inside
+    wall.position.y = 4.1; scr.add(wall);
+    for (const y of [2.4, 5.8]) {
+      const pts = []; for (let k = 0; k <= 64; k++) { const a = Math.PI - arc / 2 + k / 64 * arc; pts.push(new THREE.Vector3(Math.sin(a) * R, y, Math.cos(a) * R)); }
+      scr.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 64, .04, 6), glow(BLUE)));
+    }
+    for (const k of [0, .5, 1]) { const a = Math.PI - arc / 2 + k * arc, leg = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 2.4), new THREE.MeshStandardMaterial({ color: 0x0b1733, metalness: .8 })); leg.position.set(Math.sin(a) * R, 1.2, Math.cos(a) * R); scr.add(leg); }
+    wall.userData.onClick = () => showCard("Rendimenti di oggi", list.map(p => [short(p), `${apyTxt(p.apy)} · rischio ${riskOf(p)[1]}`]));
+    return;
+  }
+  if (STILE === "6") {  // glass tanks filled with liquid up to the APY, bubbles rising, liquid colour = risk
+    envOn(); bubbles = [];
+    list.forEach((p, i) => {
+      const a = -Math.PI * .1 + i / n * Math.PI * 2, x = Math.cos(a) * 5.3, z = Math.sin(a) * 5.3, H = 3.6, lvl = .25 + (+p.apy / maxApy) * (H - .5);
+      const col = RISK_HEX[riskOf(p)[0]], g = new THREE.Group(); g.position.set(x, 0, z); columns.add(g);
+      const steel = new THREE.MeshStandardMaterial({ color: 0x9fb2cc, metalness: 1, roughness: .25 });
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(.62, .7, .3, 48), steel); base.position.y = .15; g.add(base);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(.6, .6, .14, 48), steel); cap.position.y = .3 + H + .07; g.add(cap);
+      const liquid = new THREE.Mesh(new THREE.CylinderGeometry(.47, .47, lvl, 40), new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: .45, transparent: true, opacity: .78, roughness: .1 }));
+      liquid.position.y = .3 + lvl / 2; g.add(liquid);
+      const surf = new THREE.Mesh(new THREE.CircleGeometry(.47, 40), glow(col)); surf.rotation.x = -Math.PI / 2; surf.position.y = .3 + lvl + .001; g.add(surf);
+      const glass = new THREE.Mesh(new THREE.CylinderGeometry(.52, .52, H, 48, 1, true), new THREE.MeshPhysicalMaterial({ color: 0xcfe6ff, metalness: 0, roughness: .04, transmission: .92, thickness: .1, transparent: true, opacity: .32, side: THREE.DoubleSide, depthWrite: false }));
+      glass.position.y = .3 + H / 2; g.add(glass);
+      for (let k = 0; k < 4; k++) { const tick = new THREE.Mesh(new THREE.BoxGeometry(.12, .012, .012), glow(0xcfe6ff)); tick.position.set(.5, .3 + (k + 1) * H / 5, .12); g.add(tick); }
+      const bub = new THREE.InstancedMesh(new THREE.SphereGeometry(.035, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .6 }), 14);
+      g.add(bub); bubbles.push({ m: bub, lvl, seeds: [...Array(14)].map((_, k) => [Math.random(), (Math.random() - .5) * .7, (Math.random() - .5) * .7]) });
+      const lab = chip(p); lab.position.y = H + .9; g.add(lab);
+      g.userData.onClick = () => yieldCard(p);
+    });
+    return;
+  }
+  list.forEach((p, i) => {  // 1: ring of light columns, one tidy label each
+    const a = -Math.PI * .1 + i / n * Math.PI * 2, x = Math.cos(a) * 5.2, z = Math.sin(a) * 5.2, hgt = .4 + (+p.apy / maxApy) * 4.2;
+    const col = p.kind === "stablecoin" ? CYAN : 0x9b7bff;
+    const g = new THREE.Group(); g.position.set(x, 0, z); columns.add(g);
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(.6, .7, .14, 32), ped); pad.position.y = .07; g.add(pad);
+    const beam = new THREE.Mesh(colGeo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .35, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
+    beam.scale.y = hgt; beam.position.y = .14 + hgt / 2; g.add(beam);
+    const cap = new THREE.Mesh(capGeo, glow(col)); cap.position.y = .14 + hgt; g.add(cap);
+    const lab = chip(p); lab.position.y = hgt + .6; g.add(lab);
+    g.userData.onClick = () => yieldCard(p);
+  });
+}
+const bm = new THREE.Object3D();
+room.tickers.push((dt, t) => { for (const b of bubbles) { b.seeds.forEach(([ph, x, z], k) => { const y = ((t * .35 + ph) % 1) * b.lvl; bm.position.set(x * .6, .3 + y, z * .6); bm.scale.setScalar(.6 + ph); bm.updateMatrix(); b.m.setMatrixAt(k, bm.matrix); }); b.m.instanceMatrix.needsUpdate = true; } });
+room.tickers.push(dt => { if (orbit) { orbit.rotation.y += dt * .15; orbit.children.forEach(h => { h.rotation.y = -orbit.rotation.y + Math.PI / 2; }); } });
+
+
+// ---------------------------------------------------------------- right wall: risk traffic light per yield, vault with the real results
+const T = (g, t, x, y, size, col = "#e6efff", w = 700) => { g.fillStyle = col; g.font = `${w} ${size}px Chakra Petch, sans-serif`; g.fillText(t, x, y); };
+const pct = v => (+v).toFixed(1).replace(".", ",") + "%";
+// automatic first look only (NOT an audit): high APY, small deposits or APY made of rewards = more risk
+function riskOf(p) {
+  const apy = +p.apy || 0, tvl = +p.tvl_musd || 0, rew = +p.reward || 0;
+  if (apy > 12 || tvl < 75 || rew > apy / 2) return ["#ff4d6a", "alto"];
+  if (apy > 8 || tvl < 200 || rew > 0) return ["#ffb020", "medio"];
+  return ["#2fd59b", "più basso"];
+}
+const riskP = room.panel(6.4, 4, room.X1 - .05, 3.5, -3.5, -Math.PI / 2, (g, W, H, w) => {
+  T(g, "SEMAFORO DEL RISCHIO", 30, 62, 44, "#4fb3ff");
+  const cols = [30, 560, 730, 930, 1110];
+  ["RENDIMENTO", "APY", "DEPOSITI", "PREMI", "RISCHIO"].forEach((h, i) => T(g, h, cols[i], 125, 26, "#8ea3c8", 600));
+  const ps = ((w && w.products) || []).filter(p => p.apy != null).slice(0, 6);
+  if (!ps.length) { T(g, "nessun rendimento ancora", 30, 230, 38, "#8ea3c8", 600); return; }
+  ps.forEach((p, j) => { const y = 190 + j * 94, [c, l] = riskOf(p);
+    g.fillStyle = "rgba(86,160,255,.08)"; g.fillRect(20, y - 58, W - 40, 82);
+    T(g, String(p.title).slice(0, 26), cols[0], y, 34); T(g, pct(p.apy), cols[1], y, 34, "#4fd2ff");
+    T(g, p.tvl_musd ? (p.tvl_musd >= 1000 ? (p.tvl_musd / 1000).toFixed(1).replace(".", ",") + " Mld$" : Math.round(p.tvl_musd) + " M$") : "—", cols[2], y, 32, "#e6efff", 600);
+    T(g, p.reward ? pct(p.reward) : "—", cols[3], y, 32, "#e6efff", 600);
+    g.fillStyle = c; g.beginPath(); g.arc(cols[4] + 22, y - 12, 22, 0, 7); g.fill(); T(g, l, cols[4] + 56, y, 28, c, 600); });
+  T(g, "giudizio automatico su APY, depositi e premi · non è un audit · decide il team e poi tu", 30, H - 24, 24, "#8ea3c8", 500);
+}, 1300);
+
+const vault = new THREE.Group(); vault.position.set(13.6, 0, 7.2); vault.rotation.y = -Math.PI / 2; scene.add(vault);
+{
+  const m = new THREE.MeshStandardMaterial({ color: 0x1a2d5a, metalness: .9, roughness: .25 });
+  const b = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.8, 1.6), m); b.position.y = 1.4; vault.add(b);
+  const door = new THREE.Mesh(new THREE.CylinderGeometry(.9, .9, .12, 48), new THREE.MeshStandardMaterial({ color: 0x2a4a8a, metalness: 1, roughness: .2 })); door.rotation.x = Math.PI / 2; door.position.set(0, 1.5, .85); vault.add(door);
+  const wheel = new THREE.Group(); wheel.position.set(0, 1.5, .93); vault.add(wheel);
+  for (let k = 0; k < 3; k++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(.06, 1.2, .06), glow(CYAN)); sp.rotation.z = k * Math.PI / 3; wheel.add(sp); }
+  room.tickers.push(dt => { wheel.rotation.z += dt * .3; });
+}
+const vaultTex = canvasTex(800, 260, () => {});
+function drawVault(w) {
+  const g = vaultTex.userData.canvas.getContext("2d"); g.fillStyle = "#030918"; g.fillRect(0, 0, 800, 260); g.textAlign = "center";
+  T(g, "CASSAFORTE · RISULTATI REALI", 400, 70, 38, "#8ea3c8", 600); T(g, eur(w ? w.revenue_eur : null), 400, 180, 92, "#2fd59b");
+  T(g, w && w.orders ? `${w.orders} voci registrate da te` : "registrati da te nel registro", 400, 240, 28, "#8ea3c8", 500); vaultTex.needsUpdate = true;
+}
+drawVault(null);
+{ const sc = new THREE.Mesh(new THREE.PlaneGeometry(2.5, .82), new THREE.MeshBasicMaterial({ map: vaultTex, toneMapped: false })); sc.position.set(0, 3.3, .2); vault.add(sc);
+  vault.userData.onClick = () => showCard("Cassaforte", [["Risultati reali", eur(lastW && lastW.revenue_eur)], ["Ultimi 30 giorni", eur(lastW && lastW.revenue_30d)]], `<div class="small muted">Solo cifre vere che registri tu in Plancia → Soldi → Registro.</div>`); }
+
+// ---------------------------------------------------------------- front wall: results of the last 12 months, airdrop programmes under review
+const MESI = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
+const monthsP = room.panel(7.5, 3.5, 3, 3.4, room.Z1 - .05, Math.PI, (g, W, H, w) => {
+  T(g, "RISULTATI REALI · ULTIMI 12 MESI", 30, 62, 42, "#4fb3ff");
+  const ms = (w && w.months) || [], max = Math.max(1, ...ms.map(m => m[1])), base = H - 90, top = 130;
+  ms.forEach(([k, v], i) => { const x = 50 + i * (W - 100) / 12, bw = (W - 100) / 12 - 24, hh = v / max * (base - top);
+    g.fillStyle = v > 0 ? "#2fd59b" : "rgba(86,160,255,.25)"; g.fillRect(x, base - Math.max(6, hh), bw, Math.max(6, hh));
+    if (v > 0) { g.textAlign = "center"; T(g, eur(v), x + bw / 2, base - hh - 14, 24, "#e6efff", 600); }
+    g.textAlign = "center"; T(g, MESI[+k.slice(5) - 1] || "", x + bw / 2, H - 46, 28, "#8ea3c8", 600); g.textAlign = "left"; });
+  if (!ms.some(m => m[1] > 0)) { g.textAlign = "center"; T(g, "ancora nessun risultato registrato", W / 2, (base + top) / 2, 40, "#8ea3c8", 600); }
+}, 1500);
+const airP = room.panel(4.6, 3.2, -8.5, 3.4, room.Z1 - .05, Math.PI, (g, W, H, w) => {
+  T(g, "AIRDROP · PROGRAMMI UFFICIALI", 30, 58, 36, "#ffc35a");
+  const a = (w && w.airdrops) || [];
+  if (!a.length) { T(g, "nessun programma in valutazione", 30, 170, 36, "#8ea3c8", 600); }
+  a.slice(0, 4).forEach((x, i) => T(g, "• " + String(x.title).slice(0, 34), 30, 150 + i * 90, 34));
+  T(g, "un solo account, solo programmi ufficiali", 30, H - 60, 26, "#8ea3c8", 500); T(g, "partecipi solo se approvi tu", 30, H - 24, 26, "#8ea3c8", 500);
+}, 920);
+let lastW = null;
+
+// ---------------------------------------------------------------- data
+function world(w) {
+  lastW = w; setYields(w.products);
+  riskP.draw(w); drawVault(w); monthsP.draw(w); airP.draw(w);
+  notesTex.userData.draw((w.pages || []).map(p => p.title));
+  todoTex.userData.draw((w.posts || []).map(p => p.title));
+  const k = w.kpi, day = k && k.ai_day_usd ? k.ai_day_usd : 0, used = day ? (k.ai_today_usd || 0) / day : 0;
+  const ys = (w.products || []).filter(p => p.apy != null), best = ys.length ? Math.max(...ys.map(p => +p.apy)) : null;
+  room.drawCells([["RISULTATI REALI", eur(w.revenue_eur)], ["ULTIMI 30 GIORNI", eur(w.revenue_30d)],
+    ["MIGLIOR RENDIMENTO", best != null ? best.toFixed(1).replace(".", ",") + "%" : "—", "#4fd2ff"], ["PROPOSTE DA DECIDERE", String(w.pending_approvals || 0), w.pending_approvals ? "#ffc35a" : "#e6efff"]]);
+  $("#kRev").textContent = eur(w.revenue_eur);
+  $("#kAi").textContent = k ? `$${(k.ai_today_usd || 0).toFixed(2)} / $${day.toFixed(2)}` : "—";
+  $("#kAiBar").style.width = day ? Math.min(100, used * 100) + "%" : "0";
+  $("#kYield").textContent = ys.length ? `${ys.length} · migliore ${best.toFixed(1).replace(".", ",")}%` : "nessuno ancora";
+  $("#kApr").textContent = String(w.pending_approvals || 0);
+  coinLight.intensity = room.phase === "working" ? 18 : 10;
+}
+function demo(t) {
+  t %= 40; const who = AGENTS[Math.floor(t / 8) % 5][0];
+  const P = [["aave-v3 · USDC", 4.1, "stablecoin", "Ethereum"], ["compound · USDT", 3.6, "stablecoin", "Ethereum"], ["sky · DAI", 5.2, "stablecoin", "Ethereum"], ["morpho · USDC", 4.8, "stablecoin", "Base"],
+    ["lido · ETH", 2.9, "BTC/ETH/SOL", "Ethereum"], ["jito · SOL", 6.8, "BTC/ETH/SOL", "Solana"], ["rocket-pool · ETH", 2.7, "BTC/ETH/SOL", "Ethereum"], ["marinade · SOL", 6.4, "BTC/ETH/SOL", "Solana"]]
+    .map(([title, apy, kind, chain]) => ({ title, apy, kind, chain, tvl_musd: 800, reward: 0, date: "esempio" }));
+  return { phase: t < 34 ? "working" : "idle", agents: { [who]: { status: "working", task: "esempio: confronta i rendimenti delle stablecoin" } },
+    world: { products: P, pages: ["Esempio: stablecoin sui protocolli più grandi", "Esempio: staking liquido ETH, rischi"], posts: ["Esempio: 200 € di USDC su aave-v3"],
+      revenue_eur: 0, revenue_30d: 0, pending_approvals: 1, airdrops: [{ title: "Esempio: programma ufficiale in verifica" }], months: [...Array(12)].map((_, i) => ["2026-" + String(i + 1).padStart(2, "0"), 0]), kpi: { ai_today_usd: .3, ai_day_usd: 3 } },
+    report: { headline: "Esempio: una proposta prudente su stablecoin, da decidere.", cycle: 3 }, events: [{ ts: "2026-10-05T23:47", agent: "yield-lead", msg: "esempio: ciclo avviato" }] };
+}
+room.tickers.push((dt, t) => {
+  coin.rotation.z += dt * .5; coin.position.y = 3.3 + Math.sin(t * 1.2) * .12;
+  if (STILE === "1") columns.children.forEach((g, i) => { if (g.children[1] && g.children[1].material) g.children[1].material.opacity = .28 + Math.sin(t * 2 + i) * .08; });
+});
+room.start();
+</script>
+</body>
+</html>

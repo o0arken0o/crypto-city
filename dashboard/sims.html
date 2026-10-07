@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Casa Crypto Machine</title>
+<style>
+  :root{--bg:#0d1424;--panel:#141d33;--line:#26334f;--text:#e8ecf4;--muted:#93a0b8;--gold:#f5b83d;--good:#3ee08f;--bad:#ff5d73}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+  canvas.drag{cursor:grabbing}
+  header{position:fixed;top:0;left:0;right:0;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(180deg,#0d1424ee,#0d142400);pointer-events:none}
+  header>*{pointer-events:auto}
+  h1{font-size:18px;margin:0}h1 span{color:var(--gold)}
+  .pill{background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:12px;color:var(--muted)}
+  .pill b{color:var(--text)}
+  header a{color:var(--muted);text-decoration:none;font-size:13px}header a:hover{color:var(--text)}
+  .sp{flex:1}
+  #card{position:fixed;left:14px;bottom:14px;width:min(340px,calc(100% - 28px));background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 8px 30px #0008}
+  #card[hidden]{display:none}
+  #card h2{margin:0 0 2px;font-size:16px}
+  #card .st{font-size:12px;margin-bottom:6px}
+  #card p{margin:4px 0;font-size:13px;color:var(--muted)}
+  #card .x{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--muted);font-size:18px;cursor:pointer}
+  #hint{position:fixed;right:14px;bottom:14px;font-size:12px;color:var(--muted);background:#141d33cc;padding:4px 10px;border-radius:99px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<header>
+  <h1>🏠 Casa <span>Crypto Machine</span></h1>
+  <span class="pill" id="mode">connessione…</span>
+  <span class="pill">al lavoro <b id="nWork">0</b>/<b id="nAll">0</b></span>
+  <span class="sp"></span>
+  <a href="index.html">Plancia</a><a href="office.html">Sala trading 3D</a><a href="sales.html">Sala rendite 3D</a>
+</header>
+<div id="card" hidden><button class="x" id="cx" aria-label="Chiudi">×</button><h2 id="cn"></h2><div class="st" id="cs"></div><p id="cd"></p><p id="ct"></p><p id="cl"></p></div>
+<div id="hint">trascina per spostare · rotella per zoom · clicca un agente</div>
+
+<script>
+"use strict";
+// ============================================================ Isometric "Sims" house: three rooms, one per team.
+// Pure canvas 2D (no libraries). Agents sit at their desk while working (live data from api/live), otherwise they wander.
+const TW = 64, TH = 32;                    // tile size in px
+const W = 29, H = 8;                       // grid: rooms at x 0-8, 10-18, 20-28; walls at x 9 and 19
+const ROOMS = [
+  { id: "trading", ox: 0,  name: "TRADING", floor: ["#c9a577", "#bf9a6b"], rug: "#2c4a7a", wall: "#3b4a6b", accent: "#3ecfb2" },
+  { id: "rendite", ox: 10, name: "RENDITE", floor: ["#9fbfa8", "#94b49d"], rug: "#7a5a2c", wall: "#5b4a3b", accent: "#f5b83d" },
+  { id: "social",  ox: 20, name: "SOCIAL",  floor: ["#cfa9c4", "#c49cb9"], rug: "#4a2c6a", wall: "#6a3b5b", accent: "#ff5fa2" },
+];
+const AG = {   // name, icon, colour, room, desk [x,y] (local), "stand" = no desk
+  "ceo": ["CEO", "👑", "#f5b83d", 0, [1, 1]], "market-scanner": ["Market Scanner", "🔭", "#4c9dff", 0, [4, 1]],
+  "quant-analyst": ["Quant", "📊", "#b48cff", 0, [7, 1]], "onchain-analyst": ["On-chain", "⛓️", "#ff5d73", 0, [1, 5]],
+  "quant-dev": ["Quant Dev", "🧮", "#ff9f43", 0, [4, 5]], "risk-manager": ["Rischio", "🛑", "#3ee08f", 0, [7, 5]],
+  "ethics-guard": ["Etica", "🛡️", "#ff7b7b", 0, "stand"],
+  "yield-lead": ["Yield Lead", "🎯", "#b48cff", 1, [1, 1]], "yield-scout": ["Yield Scout", "🏦", "#7dd3fc", 1, [4, 1]],
+  "airdrop-scout": ["Airdrop Scout", "🪂", "#4c9dff", 1, [1, 5]], "portfolio-analyst": ["Portafoglio", "💼", "#f5b83d", 1, [4, 5]],
+  "social-lead": ["Social Lead", "📣", "#ff5fa2", 2, [1, 1]], "social-writer": ["Copywriter", "💬", "#ff8cc6", 2, [4, 1]],
+  "visual-designer": ["Grafico", "🎨", "#f5b83d", 2, [1, 5]],
+};
+const SAMPLE_TASKS = ["analizzo BTC", "backtest in corso", "leggo i flussi on-chain", "controllo il rischio", "cerco rendimenti", "scrivo un post", "preparo la grafica", "rivedo la strategia"];
+const SKIN = ["#f2c9a0", "#e0a97c", "#c68863", "#8d5a3b", "#f6d9bd"], HAIR = ["#2b1d14", "#5a3a22", "#d9a441", "#a33a2a", "#222a3a", "#7a7a85"];
+
+// ------------------------------------------------------------ world model
+const blocked = Array.from({ length: H }, () => Array(W).fill(false));
+const items = [];                           // static drawables {d: depth, f: fn}
+const waypoints = [];                       // nice places to wander to
+const homes = {};                           // agent -> {x,y,sit}
+const monitors = {};                        // agent -> screen element (lit while working)
+const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); const f = v => Math.max(0, Math.min(255, Math.round(v * k))); return `rgb(${f(n >> 16)},${f(n >> 8 & 255)},${f(n & 255)})`; };
+const P = (x, y, z = 0) => [(x - y) * TW / 2, (x + y) * TH / 2 - z];
+let ctx;
+function poly(pts, fill, stroke) {
+  ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
+  ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+}
+function drawBox(x, y, w, d, z0, z1, c) {   // c: {t,l,r} faces (top, +y face on the left of screen, +x face on the right)
+  const x1 = x + w, y1 = y + d;
+  poly([P(x1, y, z0), P(x1, y1, z0), P(x1, y1, z1), P(x1, y, z1)], c.r, "#0003");
+  poly([P(x, y1, z0), P(x1, y1, z0), P(x1, y1, z1), P(x, y1, z1)], c.l, "#0003");
+  poly([P(x, y, z1), P(x1, y, z1), P(x1, y1, z1), P(x, y1, z1)], c.t, "#0003");
+}
+const col = hex => ({ t: shade(hex, 1.12), l: shade(hex, .92), r: shade(hex, .7) });
+function box(x, y, w, d, z0, z1, c, extra) {
+  if (typeof c === "string") c = col(c);
+  items.push({ d: x + w / 2 + y + d / 2, f: () => { drawBox(x, y, w, d, z0, z1, c); if (extra) extra(); } });
+}
+function block(x, y, w = 1, d = 1) { for (let j = 0; j < d; j++) for (let i = 0; i < w; i++) if (blocked[y + j]) blocked[y + j][x + i] = true; }
+function textOnFaceY(txt, x, z, y, size, color) {   // text on the +y face of a back wall (reads left to right)
+  const [X, Y] = P(x, y, z), k = (TW / 2) / 40;
+  ctx.save(); ctx.transform(k, .5 * k, 0, 1, X, Y); ctx.font = `700 ${size}px system-ui,sans-serif`; ctx.fillStyle = color; ctx.textBaseline = "middle"; ctx.fillText(txt, 0, 0); ctx.restore();
+}
+
+function buildRoom(r, idx) {
+  const ox = r.ox, wallC = col(r.wall);
+  // floor
+  for (let y = 0; y < H; y++) for (let x = 0; x < 9; x++) {
+    const gx = ox + x, gy = y, tone = r.floor[(x + y) & 1];
+    items.push({ d: -100 + gx + gy, f: () => poly([P(gx, gy), P(gx + 1, gy), P(gx + 1, gy + 1), P(gx, gy + 1)], tone, "#0002") });
+  }
+  // rug in the middle corridor
+  items.push({ d: -99 + ox + 4 + 3.5, f: () => poly([P(ox + 2, 3), P(ox + 7, 3), P(ox + 7, 5), P(ox + 2, 5)], r.rug, shade(r.rug, 1.4)) });
+  // back wall (y = -1): tall boxes with windows and a sign
+  for (let x = 0; x < 9; x++) {
+    const gx = ox + x;
+    box(gx, -1, 1, 1, 0, 110, wallC, () => {
+      if (x === 2 || x === 6) {  // windows
+        poly([P(gx + .15, 0, 40), P(gx + .85, 0, 40), P(gx + .85, 0, 95), P(gx + .15, 0, 95)], "#9fd4ff", "#fff8");
+        poly([P(gx + .15, 0, 67), P(gx + .85, 0, 67), P(gx + .85, 0, 69), P(gx + .15, 0, 69)], "#fff8");
+      }
+    });
+  }
+  items.push({ d: ox + 6.2, f: () => {   // sign plate, drawn after the wall pieces it spans
+    poly([P(ox + 3.4, 0, 60), P(ox + 5.6, 0, 60), P(ox + 5.6, 0, 92), P(ox + 3.4, 0, 92)], "#111827", r.accent);
+    textOnFaceY(r.name, ox + 3.65, 76, 0, 19, r.accent);
+  } });
+  // partition wall on the right of the room (x = 9 / 19) with a doorway at y 3..4, left wall for the first room
+  if (idx < 2) for (let y = -1; y < H; y++) {
+    if (y === 3 || y === 4) continue;
+    const gx = ox + 9; if (y >= 0) blocked[y][gx] = true;
+    box(gx, y, 1, 1, 0, 46, wallC);
+  }
+}
+
+function chair(gx, gy, color) { box(gx + .2, gy + .2, .6, .6, 0, 9, color); box(gx + .2, gy + .75, .6, .15, 9, 26, color); }
+function desk(gx, gy, key, accent) {
+  block(gx, gy, 2, 1);
+  const wood = col("#8a5a36");
+  box(gx, gy, 1, 1, 0, 17, wood);
+  box(gx + 1, gy, 1, 1, 0, 17, wood);
+  // monitor on the desk: its +y face is the screen
+  const mx = gx + .3, my = gy + .15;
+  items.push({ d: gx + 1.1 + gy + .5, f: () => {
+    const on = monitors[key] && monitors[key].on;
+    drawBox(mx, my, .9, .12, 17, 36, { t: "#2a2f3a", r: "#1b1f27", l: on ? accent : "#10151f" });
+    if (on) { ctx.globalAlpha = .25; poly([P(mx - .1, my + .12, 36), P(mx + 1, my + .12, 36), P(mx + 1, my + .12, 17), P(mx - .1, my + .12, 17)], "#fff"); ctx.globalAlpha = 1; }
+  } });
+  chair(gx, gy + 1, "#3a3f55");
+}
+function plant(gx, gy) { block(gx, gy); box(gx + .25, gy + .25, .5, .5, 0, 12, "#a5603a"); items.push({ d: gx + gy + 1, f: () => { const [x, y] = P(gx + .5, gy + .5, 22); ctx.fillStyle = "#2f9d4f"; for (const [a, b, r] of [[0, 0, 13], [-8, 6, 10], [8, 7, 10], [0, -9, 9]]) { ctx.beginPath(); ctx.arc(x + a, y + b, r, 0, 7); ctx.fill(); } } }); }
+function sofa(gx, gy, c) { block(gx, gy, 2, 1); box(gx, gy, 2, 1, 0, 12, c); box(gx, gy - .02, 2, .3, 12, 28, c); box(gx - .15, gy, .25, 1, 12, 20, shade(c, .9)); }
+function setupWorld() {
+  ROOMS.forEach(buildRoom);
+  // left wall of the first room
+  for (let y = 0; y < H; y++) box(-1, y, 1, 1, 0, 110, col("#3b4a6b"));
+  box(-1, -1, 1, 1, 0, 110, col("#3b4a6b"));
+  // right outer wall of the last room (low, so the view stays open)
+  for (let y = -1; y < H; y++) box(29, y, 1, 1, 0, 46, col("#6a3b5b"));
+  for (const [name, m] of Object.entries(AG)) {
+    const r = ROOMS[m[3]], k = name, col2 = m[2];
+    if (m[4] === "stand") { homes[k] = { x: r.ox + 5.5, y: 3.5, sit: false }; continue; }
+    const [lx, ly] = m[4]; desk(r.ox + lx, ly, k, col2); monitors[k] = { on: false };
+    homes[k] = { x: r.ox + lx + .5, y: ly + 1.5, sit: true };
+  }
+  // trading: globe + sofa + podium for the ethics guard; rendite: vault; social: ring light + easel
+  const t = ROOMS[0], y = ROOMS[1], s = ROOMS[2];
+  plant(t.ox + 0, 3); plant(t.ox + 8, 3); plant(t.ox + 0, 7);
+  block(t.ox + 6, 3); box(t.ox + 6.2, 3.2, .6, .6, 0, 18, "#caa24a");
+  block(t.ox + 8, 7); items.push({ d: t.ox + 8.5 + 7.5, f: () => { const [x, yy] = P(t.ox + 8.5, 7.5, 20); const g = ctx.createRadialGradient(x - 4, yy - 4, 2, x, yy, 17); g.addColorStop(0, "#8be0ff"); g.addColorStop(1, "#1f5a8a"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, yy, 16, 0, 7); ctx.fill(); } });
+  sofa(t.ox + 3, 7, "#6a4a8a"); waypoints.push([t.ox + 3.5, 6.5], [t.ox + 4.5, 6.5]);
+  plant(y.ox + 0, 3); plant(y.ox + 8, 7); sofa(y.ox + 6, 7, "#b05a3a"); waypoints.push([y.ox + 6.5, 6.5]);
+  block(y.ox + 7, 1, 2, 1); box(y.ox + 7, 1, 2, 1, 0, 54, "#7f8aa0", () => { const [a, b] = P(y.ox + 8, 2, 28); ctx.fillStyle = "#f5b83d"; ctx.beginPath(); ctx.arc(a, b, 9, 0, 7); ctx.fill(); ctx.fillStyle = "#6b4a10"; ctx.font = "700 10px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("$", a, b); ctx.textAlign = "start"; });
+  plant(s.ox + 0, 3); plant(s.ox + 8, 3); sofa(s.ox + 5, 7, "#3a8a6a"); waypoints.push([s.ox + 5.5, 6.5]);
+  block(s.ox + 7, 1); box(s.ox + 7.45, 1.45, .1, .1, 0, 44, "#222"); items.push({ d: s.ox + 7.5 + 1.5, f: () => { const [x, yy] = P(s.ox + 7.5, 1.5, 52); ctx.fillStyle = "#fff7c8"; ctx.beginPath(); ctx.arc(x, yy, 13, 0, 7); ctx.fill(); ctx.strokeStyle = "#ffd36a"; ctx.lineWidth = 4; ctx.stroke(); } });
+  block(s.ox + 4, 5, 1, 1); box(s.ox + 4.2, 5.2, .6, .6, 0, 40, "#b8905a");
+  for (const r of ROOMS) waypoints.push([r.ox + 4.5, 3.5], [r.ox + 2.5, 3.5], [r.ox + 6.5, 4.5]);
+}
+
+// ------------------------------------------------------------ pathfinding (BFS on the walkable grid)
+const walk = (x, y) => x >= 0 && y >= 0 && x < W && y < H && !blocked[y][x];
+function path(from, to) {
+  const key = (x, y) => y * W + x, sx = Math.floor(from[0]), sy = Math.floor(from[1]), tx = Math.floor(to[0]), ty = Math.floor(to[1]);
+  const prev = new Map([[key(sx, sy), null]]), q = [[sx, sy]];
+  while (q.length) {
+    const [x, y] = q.shift(); if (x === tx && y === ty) break;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy, k = key(nx, ny);
+      if (!prev.has(k) && (walk(nx, ny) || (nx === tx && ny === ty))) { prev.set(k, [x, y]); q.push([nx, ny]); }
+    }
+  }
+  if (!prev.has(key(tx, ty))) return [];
+  const out = []; let c = [tx, ty];
+  while (c) { out.push([c[0] + .5, c[1] + .5]); c = prev.get(key(c[0], c[1])); }
+  return out.reverse().slice(1);
+}
+
+// ------------------------------------------------------------ agents
+const agents = [];
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function mkAgent(name, i) {
+  const m = AG[name], h = homes[name];
+  const a = { name, label: m[0], icon: m[1], color: m[2], room: m[3], home: h, x: h.x, y: h.y, path: [], wait: 1 + rnd() * 5, working: false, paused: false, task: "", last: "", runs: 0, usd: 0, desc: "",
+    skin: SKIN[i % SKIN.length], hair: HAIR[(i * 3) % HAIR.length], longHair: i % 2 === 1, phase: rnd() * 6, sitting: h.sit };
+  a.x = h.x; a.y = h.y; return a;
+}
+function stepAgent(a, dt) {
+  if (a.working) {
+    if (!a.atHome) {
+      if (!a.path.length) { a.path = path([a.x, a.y], [a.home.x, a.home.y]); if (!a.path.length) { a.x = a.home.x; a.y = a.home.y; } }
+    }
+  } else if (!a.path.length) {
+    a.sitting = false; a.wait -= dt;
+    if (a.wait <= 0) {
+      const wp = waypoints[Math.floor(rnd() * waypoints.length)]; a.path = path([a.x, a.y], wp); a.wait = 3 + rnd() * 7;
+      if (rnd() < .35) a.path = path([a.x, a.y], [a.home.x, a.home.y]);
+    }
+  }
+  a.moving = false;
+  if (a.path.length) {
+    const [tx, ty] = a.path[0], dx = tx - a.x, dy = ty - a.y, dist = Math.hypot(dx, dy), step = 1.7 * dt;
+    a.sitting = false; a.moving = true; a.face = dx - dy >= 0 ? 1 : -1;
+    if (dist <= step) { a.x = tx; a.y = ty; a.path.shift(); } else { a.x += dx / dist * step; a.y += dy / dist * step; }
+  }
+  a.atHome = Math.hypot(a.x - a.home.x, a.y - a.home.y) < .05;
+  if (a.atHome && a.home.sit && a.working) a.sitting = true;
+  if (monitors[a.name]) monitors[a.name].on = a.working && a.atHome;
+}
+function drawAgent(a, t) {
+  const [sx, sy0] = P(a.x, a.y, 0), bob = a.moving ? Math.abs(Math.sin(t * 9 + a.phase)) * 3 : Math.sin(t * 2 + a.phase) * .6;
+  const sit = a.sitting ? 8 : 0, sy = sy0 - sit;
+  ctx.save(); ctx.translate(sx, sy);
+  // shadow
+  ctx.fillStyle = "#0004"; ctx.beginPath(); ctx.ellipse(0, sit, 11, 5, 0, 0, 7); ctx.fill();
+  // legs
+  const sw = a.moving ? Math.sin(t * 9 + a.phase) * 4 : 0;
+  ctx.fillStyle = "#2a3350"; if (!a.sitting) { ctx.fillRect(-5 + sw, -10, 4, 10); ctx.fillRect(1 - sw, -10, 4, 10); } else { ctx.fillRect(-6, -8, 12, 5); }
+  // body
+  ctx.fillStyle = a.color; ctx.beginPath(); ctx.roundRect(-8, -26 - bob, 16, 18, 5); ctx.fill();
+  ctx.fillStyle = "#0003"; ctx.fillRect(2, -26 - bob, 6, 18);
+  // typing arms
+  if (a.sitting) { ctx.fillStyle = a.skin; const k = Math.sin(t * 18 + a.phase) * 2; ctx.fillRect(-9, -20 - bob + k, 4, 5); ctx.fillRect(5, -20 - bob - k, 4, 5); }
+  // head
+  ctx.fillStyle = a.skin; ctx.beginPath(); ctx.arc(0, -33 - bob, 8, 0, 7); ctx.fill();
+  ctx.fillStyle = a.hair; ctx.beginPath(); ctx.arc(0, -35 - bob, 8.4, Math.PI * 1.05, Math.PI * 1.95); ctx.fill();
+  if (a.longHair) ctx.fillRect(-8.4, -35 - bob, 3.5, 12), ctx.fillRect(4.9, -35 - bob, 3.5, 12);
+  ctx.fillStyle = "#222"; ctx.fillRect(-4, -33 - bob, 2, 2); ctx.fillRect(2, -33 - bob, 2, 2);
+  // plumbob
+  const pb = -56 + Math.sin(t * 2.2 + a.phase) * 3 - bob, pc = a.paused ? "#ff5d73" : a.working ? "#5dff9a" : "#3ec97a";
+  ctx.fillStyle = pc; ctx.globalAlpha = a.working ? 1 : .8; ctx.beginPath(); ctx.moveTo(0, pb - 9); ctx.lineTo(6, pb); ctx.lineTo(0, pb + 9); ctx.lineTo(-6, pb); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "#fff6"; ctx.beginPath(); ctx.moveTo(0, pb - 9); ctx.lineTo(6, pb); ctx.lineTo(0, pb); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+  if (a === sel) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, sit, 15, 7, 0, 0, 7); ctx.stroke(); }
+  ctx.restore();
+  a.sx = sx; a.sy = sy - 28;
+}
+function drawLabel(a) {
+  ctx.save(); ctx.translate(a.sx, a.sy);
+  ctx.font = "600 11px system-ui,sans-serif"; ctx.textBaseline = "middle";
+  const txt = a.label, w = ctx.measureText(txt).width + 22;
+  ctx.fillStyle = "#0b1020d9"; ctx.beginPath(); ctx.roundRect(-w / 2, 38, w, 17, 8); ctx.fill();
+  ctx.fillStyle = a.color; ctx.beginPath(); ctx.arc(-w / 2 + 9, 46.5, 3.5, 0, 7); ctx.fill();
+  ctx.fillStyle = "#e8ecf4"; ctx.fillText(txt, -w / 2 + 16, 47);
+  if (a.working) {
+    const t = (a.icon + " " + (a.task || "al lavoro")).slice(0, 34); ctx.font = "12px system-ui,sans-serif";
+    const bw = ctx.measureText(t).width + 16;
+    ctx.fillStyle = "#fffffff2"; ctx.beginPath(); ctx.roundRect(-bw / 2, -66, bw, 21, 10); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-4, -45); ctx.lineTo(4, -45); ctx.lineTo(0, -39); ctx.fill();
+    ctx.fillStyle = "#1a2236"; ctx.fillText(t, -bw / 2 + 8, -55);
+  }
+  ctx.restore();
+}
+// the cat
+const cat = { x: 13.5, y: 4.5, path: [], wait: 1, phase: 0 };
+function stepCat(dt) {
+  if (!cat.path.length) { cat.wait -= dt; if (cat.wait <= 0) { const wp = waypoints[Math.floor(rnd() * waypoints.length)]; cat.path = path([cat.x, cat.y], wp); cat.wait = 2 + rnd() * 6; } }
+  cat.moving = false;
+  if (cat.path.length) { const [tx, ty] = cat.path[0], dx = tx - cat.x, dy = ty - cat.y, d = Math.hypot(dx, dy), s = 2.4 * dt; cat.moving = true; cat.face = dx - dy >= 0 ? 1 : -1; if (d <= s) { cat.x = tx; cat.y = ty; cat.path.shift(); } else { cat.x += dx / d * s; cat.y += dy / d * s; } }
+}
+function drawCat(t) {
+  const [x, y] = P(cat.x, cat.y), f = cat.face || 1, b = cat.moving ? Math.abs(Math.sin(t * 12)) * 2 : 0;
+  ctx.save(); ctx.translate(x, y); ctx.scale(f, 1);
+  ctx.fillStyle = "#0004"; ctx.beginPath(); ctx.ellipse(0, 0, 9, 3.5, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = "#e07b39"; ctx.beginPath(); ctx.ellipse(0, -6 - b, 8, 5, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(8, -10 - b, 4.5, 0, 7); ctx.fill(); ctx.beginPath(); ctx.moveTo(5, -13 - b); ctx.lineTo(6, -18 - b); ctx.lineTo(9, -13 - b); ctx.fill(); ctx.beginPath(); ctx.moveTo(8, -13 - b); ctx.lineTo(10, -18 - b); ctx.lineTo(12, -12 - b); ctx.fill();
+  ctx.strokeStyle = "#e07b39"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-8, -7); ctx.quadraticCurveTo(-15, -12 + Math.sin(t * 4) * 3, -12, -18); ctx.stroke();
+  ctx.restore();
+}
+
+// ------------------------------------------------------------ rendering
+let view = { s: 1, ox: 0, oy: 0 }, sel = null, DPR = 1, cw = 0, chh = 0;
+const cv = document.getElementById("c");
+function fit() {
+  DPR = window.devicePixelRatio || 1; cw = innerWidth; chh = innerHeight; cv.width = cw * DPR; cv.height = chh * DPR;
+  const minX = P(-1, H)[0], maxX = P(W + 1, -1)[0], minY = P(-1, -1, 110)[1], maxY = P(W, H)[1] + 40;
+  view.s = Math.min(cw / (maxX - minX + 60), (chh - 70) / (maxY - minY)); view.ox = cw / 2 - (minX + maxX) / 2 * view.s; view.oy = 60 + (chh - 70 - (maxY - minY) * view.s) / 2 - minY * view.s;
+}
+function frame(ts) {
+  const t = ts / 1000, dt = Math.min(.05, t - (frame.t || t)); frame.t = t;
+  for (const a of agents) stepAgent(a, dt); stepCat(dt);
+  ctx = cv.getContext("2d"); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const g = ctx.createLinearGradient(0, 0, 0, chh); g.addColorStop(0, "#162038"); g.addColorStop(1, "#0b1020"); ctx.fillStyle = g; ctx.fillRect(0, 0, cw, chh);
+  ctx.setTransform(DPR * view.s, 0, 0, DPR * view.s, view.ox * DPR, view.oy * DPR);
+  const list = items.map(i => i).concat(agents.map(a => ({ d: a.x + a.y + .45, f: () => drawAgent(a, t) })), [{ d: cat.x + cat.y + .4, f: () => drawCat(t) }]);
+  list.sort((a, b) => a.d - b.d); for (const i of list) i.f();
+  for (const a of agents) drawLabel(a);
+  requestAnimationFrame(frame);
+}
+
+// ------------------------------------------------------------ interaction
+let drag = null;
+const toWorld = (px, py) => [(px - view.ox) / view.s, (py - view.oy) / view.s];
+cv.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, ox: view.ox, oy: view.oy, moved: false }; cv.setPointerCapture(e.pointerId); cv.classList.add("drag"); });
+cv.addEventListener("pointermove", e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 4) drag.moved = true; view.ox = drag.ox + dx; view.oy = drag.oy + dy; });
+cv.addEventListener("pointerup", e => {
+  cv.classList.remove("drag"); const d = drag; drag = null; if (!d || d.moved) return;
+  const [wx, wy] = toWorld(e.clientX, e.clientY); let best = null, bd = 1e9;
+  for (const a of agents) { const dd = Math.hypot(wx - a.sx, wy - (a.sy + 10)); if (dd < 36 && dd < bd) { best = a; bd = dd; } }
+  select(best);
+});
+cv.addEventListener("wheel", e => { e.preventDefault(); const k = e.deltaY < 0 ? 1.12 : 1 / 1.12, ns = Math.max(.4, Math.min(3, view.s * k)); view.ox = e.clientX - (e.clientX - view.ox) * ns / view.s; view.oy = e.clientY - (e.clientY - view.oy) * ns / view.s; view.s = ns; }, { passive: false });
+addEventListener("resize", fit);
+const $ = id => document.getElementById(id);
+function select(a) {
+  sel = a; $("card").hidden = !a; if (!a) return;
+  $("cn").textContent = a.icon + " " + a.label;
+  $("cs").innerHTML = a.paused ? `<span style="color:var(--bad)">● in pausa</span>` : a.working ? `<span style="color:var(--good)">● al lavoro</span>` : `<span style="color:var(--muted)">● a riposo</span>`;
+  $("cd").textContent = a.desc || "";
+  $("ct").textContent = a.task ? "Compito: " + a.task : "";
+  $("cl").textContent = (a.runs ? a.runs + " esecuzioni" : "") + (a.usd ? " · " + a.usd.toFixed(2) + " $ spesi" : "") + (a.last ? " · ultimo: " + String(a.last).slice(0, 80) : "");
+}
+$("cx").onclick = () => select(null);
+
+// ------------------------------------------------------------ live data (api/live per team) with demo fallback
+const DEMO = new URLSearchParams(location.search).has("demo");
+let live = false;
+function tokenHdr() { try { const t = localStorage.getItem("mm-token"); return t ? { "X-MM-Token": t } : {}; } catch (e) { return {}; } }
+async function poll() {
+  if (DEMO) return demoTick();
+  try {
+    let ok = 0;
+    for (const r of ROOMS) {
+      const res = await fetch("api/live?team=" + r.id, { cache: "no-store", headers: tokenHdr() });
+      if (res.status === 401) { const t = prompt("Password della plancia (MM_TOKEN):"); if (t) { try { localStorage.setItem("mm-token", t); } catch (e) {} } throw 0; }
+      if (!res.ok) throw 0;
+      const j = await res.json(); ok++;
+      for (const a of agents) {
+        const d = (j.agents || {})[a.name]; if (!d) continue;
+        a.desc = d.desc || a.desc; a.runs = d.runs || 0; a.usd = d.usd || 0; a.paused = !!d.paused;
+        if (AG[a.name][3] === ROOMS.indexOf(r)) { a.working = d.status && d.status !== "idle" && !d.paused; a.task = d.task || ""; a.last = d.last || ""; }
+      }
+    }
+    live = ok === ROOMS.length; $("mode").textContent = "dati in diretta"; $("mode").style.color = "var(--good)";
+  } catch (e) { live = false; demoTick(); }
+  count();
+}
+let demoAt = 0;
+function demoTick() {
+  $("mode").textContent = "demo (nessun dato in diretta)"; $("mode").style.color = "var(--gold)";
+  if (Date.now() - demoAt < 7000) return; demoAt = Date.now();
+  for (const a of agents) { a.working = false; a.task = ""; }
+  const n = 2 + Math.floor(rnd() * 3);
+  for (let i = 0; i < n; i++) { const a = agents[Math.floor(rnd() * agents.length)]; a.working = true; a.task = SAMPLE_TASKS[Math.floor(rnd() * SAMPLE_TASKS.length)]; }
+}
+function count() { $("nWork").textContent = agents.filter(a => a.working).length; $("nAll").textContent = agents.length; if (sel) select(sel); }
+
+// ------------------------------------------------------------ boot
+setupWorld();
+Object.keys(AG).forEach((n, i) => agents.push(mkAgent(n, i)));
+fit(); poll(); setInterval(poll, 5000); setInterval(() => { if (!live) { demoTick(); count(); } }, 1000);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

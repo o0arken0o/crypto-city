@@ -1,0 +1,104 @@
+name: Crypto social
+# Team social: post pronti (testo + immagini) per Instagram, TikTok, LinkedIn e Facebook sui prodotti in vendita.
+# Non pubblica niente: ogni post pronto diventa un blocco "tocca a te" in plancia, lo pubblica il proprietario.
+# Massimo 3 post a settimana; senza prodotti in vendita o a limite raggiunto il ciclo salta senza spendere.
+# Cron in UTC: 01:47 = 03:47 in Italia (ora legale), tra un ciclo prodotto e un ciclo vendite.
+# Secrets: add any provider keys you want; the router discovers configured keys automatically.
+# Variables: MM_FREE_ONLY=true restricts routing to configured free-provider families.
+#            MM_SOCIAL_ENABLED ('false' ferma i cicli programmati), MM_MODEL
+# Ciclo programmato spento (ottobre 2026): il proprietario non usa i post social. Si avvia solo a mano
+# (Actions → Crypto social → Run workflow); per riaccenderlo rimetti "schedule: - cron: "47 1 * * *"".
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "Istruzione extra per il team social (opzionale)"
+        required: false
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: mm-state
+  cancel-in-progress: false
+
+jobs:
+  social:
+    if: github.event_name != 'schedule' || vars.MM_SOCIAL_ENABLED != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MM_SITE_URL: ${{ vars.MM_SITE_URL }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Install Claude Code (main AI engine; the orchestrator stays as fallback)
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Verify Python
+        run: python3 --version
+      - name: Apply pending dashboard commands
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/apply_issues.py apply
+      - name: Site traffic from the online panel (visits, clicks; no cookies)
+        env:
+          MM_TRAFFIC_URL: ${{ secrets.MM_TRAFFIC_URL }}  # saved by the panel itself
+          MM_TRAFFIC_KEY: ${{ secrets.MM_TRAFFIC_KEY }}
+        run: python3 scripts/traffic_sync.py
+      - name: Tools for the post images
+        run: python3 -m pip install --quiet --user --break-system-packages pillow || echo "Pillow non installato"
+      - name: Run one social-team cycle
+        env:
+          MM_LINKEDIN: ${{ secrets.LINKEDIN_ACCESS_TOKEN != '' }}  # only says whether LinkedIn is connected, never the token
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN || secrets.CLAUDE_CODE_OAUTH_TOKEN2 }}
+          MM_ENGINE: ${{ vars.MM_ENGINE || 'auto' }}  # auto = Claude if its token is set, else the orchestrator
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          MM_MODEL: ${{ vars.MM_MODEL || 'sonnet' }}
+          MM_FREE_ONLY: ${{ vars.MM_FREE_ONLY || 'false' }}
+          MM_PROVIDER_ORDER: ${{ vars.MM_PROVIDER_ORDER || 'groq,anthropic,openai,gemini,cerebras,openrouter,together,mistral,deepseek,xai' }}
+          MM_COMMAND: ${{ github.event.inputs.note != '' && format('/crypto-machine:social {0}', github.event.inputs.note) || '/crypto-machine:social' }}
+          MM_LIVE_TOKEN: ${{ github.token }}  # only for the live 3D office feed; cycle.sh hides it from the agents
+          MM_FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}  # manual runs never skip
+        run: |
+          set -o pipefail
+          bash scripts/cycle.sh | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Telegram alerts (signals, things for you, skipped or failed cycles; optional)
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}  # optional: without it the step does nothing
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}  # optional: found from the /start message
+          MM_SITE_URL: ${{ vars.MM_SITE_URL }}
+        run: python3 scripts/telegram.py
+      - name: Commit state and prepared posts
+        id: commit
+        if: always()
+        run: |
+          git config user.name "crypto-machine[bot]"
+          git config user.email "crypto-machine@users.noreply.github.com"
+          git add -A state products site
+          git diff --cached --quiet && exit 0
+          git commit -m "mm: team social $(date -u +%FT%TZ)"
+          ok=0; for i in 1 2 3; do git pull --rebase -X theirs && git push && { ok=1; break; }; sleep $((i*3)); done; [ "$ok" = 1 ]
+      - name: Reply and close applied command issues
+        if: always() && steps.commit.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/apply_issues.py close
+      - name: Notify the owner only if something waits for them (one self-closing issue)
+        if: always() && steps.commit.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          MM_SITE_URL: ${{ vars.MM_SITE_URL }}
+        run: python3 scripts/notify.py

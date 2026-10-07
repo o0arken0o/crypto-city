@@ -1,0 +1,18 @@
+CRYPTO CITY - PROGETTO COMPLETO
+
+1. Estrai tutto lo ZIP. Non avviare file dentro una cartella compressa.
+2. Apri la cartella con dashboard, engine, state e APRI_CRYPTO_CITY.
+3. Fai doppio clic su APRI_CRYPTO_CITY.cmd.
+4. Attendi il browser e lascia aperta la finestra del server.
+
+Serve Python 3.10 o successivo (consigliato 3.12).
+Non devi scegliere una vecchia cartella o installare un aggiornamento.
+Questo progetto usa i propri dati e conserva la vecchia installazione.
+Nella citta' clicca uno dei 12 edifici per aprire la sua sala.
+
+Se compare un errore, manda una foto della finestra con il messaggio.
+Per fermare il server premi Ctrl+C nella sua finestra.
+
+Gli ordini reali richiedono sempre la conferma esplicita del proprietario.
+Non e' un consiglio finanziario. Risultati passati o simulati non
+garantiscono quelli futuri.

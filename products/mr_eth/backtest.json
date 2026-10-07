@@ -1,0 +1,58 @@
+{
+ "pair": "ETH-USD",
+ "timeframe": "1d",
+ "params": {
+  "fast": 10,
+  "slow": 30,
+  "k_std": 0.5
+ },
+ "candles": 1499,
+ "from": "2022-08-27",
+ "to": "2026-10-03",
+ "split": "2025-07-11",
+ "costs": {
+  "fee": 0.001,
+  "slippage": 0.0005
+ },
+ "full": {
+  "return": 0.0673,
+  "max_dd": 0.5798,
+  "sharpe": 0.25,
+  "cagr": 0.016
+ },
+ "in_sample": {
+  "return": 0.7373,
+  "max_dd": 0.4351,
+  "sharpe": 0.67,
+  "cagr": 0.2119
+ },
+ "out_of_sample": {
+  "return": -0.3857,
+  "max_dd": 0.5447,
+  "sharpe": -0.7,
+  "cagr": -0.327
+ },
+ "buy_hold": {
+  "return": 0.8018,
+  "max_dd": 0.676,
+  "sharpe": 0.54,
+  "cagr": 0.1543
+ },
+ "buy_hold_oos": {
+  "return": -0.092,
+  "max_dd": 0.676,
+  "sharpe": 0.2,
+  "cagr": -0.0755
+ },
+ "trades": 146,
+ "time_in_market": 0.4,
+ "checks": {
+  "oos_guadagna": false,
+  "oos_sharpe": false,
+  "drawdown": false,
+  "operazioni": true,
+  "meno_rischio_del_hold": true
+ },
+ "verdict": "FAIL",
+ "ran": "2026-10-04T15:17:29Z"
+}

@@ -1,0 +1,1111 @@
+{
+ "version": 1,
+ "mission": "Trovare e validare strategie crypto con rischio controllato; soldi veri solo dopo backtest, paper trading e ok del proprietario.",
+ "status": "running",
+ "cycle": 10,
+ "last_cycle": "2026-10-05T09:07:23+00:00",
+ "budget": {
+  "usd_per_day": 3.0,
+  "usd_per_cycle": 0.5,
+  "usd_today": 0.8555,
+  "usd_total": 1.2286,
+  "tokens_total": 2296592,
+  "day": "2026-10-05",
+  "cash_spend_limit_eur": 0.0,
+  "saver": true,
+  "usd_by_day": {
+   "2026-10-04": 0.3731,
+   "2026-10-05": 0.8555
+  }
+ },
+ "agents": {
+  "ceo": {
+   "desc": "Capo del team trading: legge il brief, decide, delega",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 10,
+   "usd": 0.6677,
+   "last_run": "2026-10-05T09:07:25+00:00",
+   "note": ""
+  },
+  "market-scanner": {
+   "desc": "Scansiona mercati crypto: trend, volatilità, liquidità, regimi di mercato",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 3,
+   "usd": 0.2075,
+   "last_run": "2026-10-05T04:18:53+00:00",
+   "note": ""
+  },
+  "quant-analyst": {
+   "desc": "Trasforma un'idea in una strategia testabile e le dà un punteggio prudente",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 2,
+   "usd": 0.0616,
+   "last_run": "2026-10-05T04:18:53+00:00",
+   "note": ""
+  },
+  "onchain-analyst": {
+   "desc": "Dati on-chain, funding, flussi, sentiment: contesto e rischi per le strategie",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 0,
+   "usd": 0.0,
+   "last_run": null,
+   "note": ""
+  },
+  "quant-dev": {
+   "desc": "Scrive strategy.py, lancia backtest e paper trading, prepara i grafici",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 2,
+   "usd": 0.0944,
+   "last_run": "2026-10-05T09:07:25+00:00",
+   "note": ""
+  },
+  "risk-manager": {
+   "desc": "Rischio: drawdown, dimensione delle posizioni, capitale massimo, stop delle strategie",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 1,
+   "usd": 0.0253,
+   "last_run": "2026-10-05T01:05:44+00:00",
+   "note": ""
+  },
+  "ethics-guard": {
+   "desc": "Verifica ogni azione rispetto a POLICY.md",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 0,
+   "usd": 0.0,
+   "last_run": null,
+   "note": ""
+  },
+  "yield-lead": {
+   "desc": "Team rendite: legge il brief rendite, decide e delega",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 5,
+   "usd": 0.172,
+   "last_run": "2026-10-05T01:07:29+00:00",
+   "note": ""
+  },
+  "yield-scout": {
+   "desc": "Team rendite: staking e rendimenti su stablecoin/asset principali, con i rischi",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 1,
+   "usd": 0.0,
+   "last_run": "2026-10-04T02:55:57+00:00",
+   "note": ""
+  },
+  "airdrop-scout": {
+   "desc": "Team rendite: airdrop e programmi legittimi (un solo account, niente farming vietato)",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 0,
+   "usd": 0.0,
+   "last_run": null,
+   "note": ""
+  },
+  "portfolio-analyst": {
+   "desc": "Team rendite: portafoglio del proprietario, ribilanciamento, DCA, risultati reali",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 0,
+   "usd": 0.0,
+   "last_run": null,
+   "note": ""
+  },
+  "social-lead": {
+   "desc": "Team social: legge il brief social, decide quali post preparare e delega",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 0,
+   "usd": 0.0,
+   "last_run": null,
+   "note": ""
+  },
+  "social-writer": {
+   "desc": "Team social: testi dei post, caption, hashtag e testo alternativo",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 0,
+   "usd": 0.0,
+   "last_run": null,
+   "note": ""
+  },
+  "visual-designer": {
+   "desc": "Team social: immagini e caroselli dai grafici veri (backtest, paper trading)",
+   "status": "active",
+   "weight": 1.0,
+   "runs": 0,
+   "usd": 0.0,
+   "last_run": null,
+   "note": ""
+  }
+ },
+ "strategies": {
+  "trend-following": {
+   "desc": "Seguire i trend di BTC/ETH/major (medie mobili, breakout) con uscita in cassa",
+   "status": "active",
+   "weight": 1.0,
+   "pulls": 3
+  },
+  "mean-reversion": {
+   "desc": "Comprare gli eccessi di ribasso e vendere i rimbalzi su timeframe brevi",
+   "status": "active",
+   "weight": 1.0,
+   "pulls": 4
+  },
+  "momentum-rotation": {
+   "desc": "Ruotare tra le crypto principali più forti, cassa quando tutto scende",
+   "status": "active",
+   "weight": 1.0,
+   "pulls": 4
+  },
+  "smart-dca": {
+   "desc": "Accumulo periodico (DCA) che compra di più quando il prezzo è basso",
+   "status": "active",
+   "weight": 1.0,
+   "pulls": 3
+  },
+  "volatility-regime": {
+   "desc": "Esposizione ridotta quando la volatilità esplode, piena quando è calma",
+   "status": "active",
+   "weight": 1.0,
+   "pulls": 3
+  },
+  "yield-staking": {
+   "desc": "Rendimenti di staking e stablecoin su piattaforme solide (team rendite)",
+   "status": "active",
+   "weight": 1.0,
+   "pulls": 3
+  }
+ },
+ "markets": [
+  {
+   "name": "BTC 1h mean-reversion",
+   "strategy": "mean-reversion",
+   "demand": 3,
+   "ticket": 5,
+   "speed": 4,
+   "competition": 3,
+   "confidence": 0.55,
+   "evidence": "autocorr=-0.067 (mean-reversion lag1), vol_1h=5.0%/ann, DD=-3.0%, ret_30d=+2.1%, n_candles=720 (2025-09-04 to 2026-10-03)",
+   "id": "mkt_58df21",
+   "score": 48.8,
+   "updated": "2026-10-04T20:38:25+00:00"
+  },
+  {
+   "name": "ETH 1d momentum-rotation",
+   "strategy": "momentum-rotation",
+   "demand": 4,
+   "ticket": 5,
+   "speed": 3,
+   "competition": 4,
+   "confidence": 0.58,
+   "evidence": "vol 56.7%/anno, ret +9.9% (30d), acf lag1 -0.009, drawdown -5.6% (2026-10-05)",
+   "id": "mkt_064477",
+   "score": 45.3,
+   "updated": "2026-10-05T02:18:49+00:00"
+  },
+  {
+   "name": "SOL 1d momentum-rotation",
+   "strategy": "momentum-rotation",
+   "demand": 5,
+   "ticket": 4,
+   "speed": 4,
+   "competition": 3,
+   "confidence": 0.62,
+   "evidence": "vol 65.5%/anno, ret +17.8% (30d), acf lag1 -0.039, drawdown -12.6% (2026-10-05)",
+   "id": "mkt_32000a",
+   "score": 55.6,
+   "updated": "2026-10-05T02:18:50+00:00"
+  },
+  {
+   "name": "SOL 1d smart-dca",
+   "strategy": "smart-dca",
+   "demand": 4,
+   "ticket": 4,
+   "speed": 2,
+   "competition": 2,
+   "confidence": 0.6,
+   "evidence": "vol 65.5%/anno oscillante, acf neg (-0.039) permette rebalance su overshoots, 17.8% ret in 30d (2026-10-05)",
+   "id": "mkt_ba7e6b",
+   "score": 46.9,
+   "updated": "2026-10-05T02:18:53+00:00"
+  },
+  {
+   "name": "XRP 1d volatility-regime",
+   "strategy": "volatility-regime",
+   "demand": 3,
+   "ticket": 4,
+   "speed": 3,
+   "competition": 2,
+   "confidence": 0.55,
+   "evidence": "volatilità 85-95% annualizzata, regimi di bassa/media volatilità osservabili in 2.7 anni (2024-2026), autocorrelazione bassa suggerisce switch regime",
+   "id": "mkt_25e3ce",
+   "score": 47.2,
+   "updated": "2026-10-05T04:18:31+00:00"
+  },
+  {
+   "name": "ADA 1d volatility-regime",
+   "strategy": "volatility-regime",
+   "demand": 2,
+   "ticket": 4,
+   "speed": 2,
+   "competition": 2,
+   "confidence": 0.48,
+   "evidence": "volatilità 75-80% annualizzata, minore variabilità di regime rispetto a XRP, periodo 2024-2026",
+   "id": "mkt_ad2753",
+   "score": 33.6,
+   "updated": "2026-10-05T04:18:35+00:00"
+  },
+  {
+   "name": "CRO 1d volatility-regime",
+   "strategy": "volatility-regime",
+   "demand": 2,
+   "ticket": 3,
+   "speed": 2,
+   "competition": 3,
+   "confidence": 0.5,
+   "evidence": "volatilità 90%+ annualizzata, liquidità inferiore ad ADA, switch regime osservabile su timeframe 1d",
+   "id": "mkt_e525e9",
+   "score": 25.0,
+   "updated": "2026-10-05T04:18:35+00:00"
+  }
+ ],
+ "opportunities": [
+  {
+   "id": "opp_82966b",
+   "stage": "killed",
+   "created": "2026-10-04T00:28:48+00:00",
+   "strategy": "trend-following",
+   "score": 0.0,
+   "updated": "2026-10-04T00:49:22+00:00",
+   "next_action": "voce vuota creata per errore dal modello AI"
+  },
+  {
+   "stage": "killed",
+   "id": "opp_b6a213",
+   "created": "2026-10-04T00:29:03+00:00",
+   "strategy": "trend-following",
+   "score": 0.0,
+   "updated": "2026-10-04T00:49:22+00:00",
+   "next_action": "voce vuota creata per errore dal modello AI"
+  },
+  {
+   "stage": "killed",
+   "id": "opp_e22cd5",
+   "created": "2026-10-04T00:30:30+00:00",
+   "strategy": "trend-following",
+   "score": 0.0,
+   "updated": "2026-10-04T00:49:23+00:00",
+   "next_action": "voce vuota creata per errore dal modello AI"
+  },
+  {
+   "stage": "killed",
+   "id": "opp_74ac68",
+   "created": "2026-10-04T00:30:31+00:00",
+   "strategy": "trend-following",
+   "score": 0.0,
+   "updated": "2026-10-04T00:49:23+00:00",
+   "next_action": "voce vuota creata per errore dal modello AI"
+  },
+  {
+   "stage": "killed",
+   "id": "opp_6d3207",
+   "created": "2026-10-04T00:30:51+00:00",
+   "strategy": "trend-following",
+   "score": 0.0,
+   "updated": "2026-10-04T00:49:23+00:00",
+   "next_action": "voce vuota creata per errore dal modello AI"
+  },
+  {
+   "stage": "killed",
+   "id": "opp_9cd45c",
+   "created": "2026-10-04T00:31:19+00:00",
+   "strategy": "trend-following",
+   "score": 0.0,
+   "updated": "2026-10-04T00:49:23+00:00",
+   "next_action": "voce vuota creata per errore dal modello AI"
+  },
+  {
+   "stage": "killed",
+   "id": "opp_de38db",
+   "created": "2026-10-04T00:31:48+00:00",
+   "strategy": "trend-following",
+   "score": 0.0,
+   "updated": "2026-10-04T00:49:23+00:00",
+   "next_action": "voce vuota creata per errore dal modello AI"
+  },
+  {
+   "stage": "killed",
+   "id": "opp_7b472f",
+   "created": "2026-10-04T00:32:52+00:00",
+   "strategy": "trend-following",
+   "score": 0.0,
+   "updated": "2026-10-04T00:49:23+00:00",
+   "next_action": "voce vuota creata per errore dal modello AI"
+  },
+  {
+   "stage": "killed",
+   "score": 0.0,
+   "id": "opp_4238c0",
+   "created": "2026-10-04T00:33:54+00:00",
+   "strategy": "trend-following",
+   "updated": "2026-10-04T00:49:23+00:00",
+   "next_action": "voce vuota creata per errore dal modello AI"
+  },
+  {
+   "stage": "killed",
+   "score": 0.0,
+   "id": "opp_6cb9fe",
+   "created": "2026-10-04T00:34:03+00:00",
+   "strategy": "trend-following",
+   "updated": "2026-10-04T00:49:23+00:00",
+   "next_action": "voce vuota creata per errore dal modello AI"
+  },
+  {
+   "title": "Mean-reversion BTC-USD 1h (z-score 48, entrata -2)",
+   "strategy": "mean-reversion",
+   "market": "mkt_58df21",
+   "expected_eur": 3,
+   "confidence": 0.2,
+   "cost_eur": 0,
+   "effort_h": 1,
+   "days_to_cash": 30,
+   "evidence_score": 0.25,
+   "niche_specificity": 0.6,
+   "rules": "BTC-USD 1h, solo spot. z=(close-SMA48)/std48. Da 0%: entra al 100% se z<-2. Da 100%: esci a 0% se z>=0 oppure close<entry*0.97 (stop fisso 3%). Parametri: finestra 48, soglia -2, stop 3%. Costo 0,15% per cambio: il rimbalzo medio deve superare 0,3% andata/ritorno, rischio alto che i costi lo mangino; se il backtest netto < buy&hold o <30 scambi/anno, scartare.",
+   "next_action": "paper trading in corso",
+   "id": "opp_9ec635",
+   "stage": "building",
+   "created": "2026-10-04T22:38:59+00:00",
+   "score": 0.7,
+   "updated": "2026-10-05T01:05:37+00:00"
+  },
+  {
+   "title": "Momentum SOL 1d (ROC 60 + media 50)",
+   "strategy": "momentum-rotation",
+   "market": "mkt_32000a",
+   "expected_eur": 8,
+   "confidence": 0.25,
+   "cost_eur": 0,
+   "effort_h": 1,
+   "days_to_cash": 45,
+   "evidence_score": 0.3,
+   "niche_specificity": 0.5,
+   "rules": "SOL-USD 1d, spot. Esposizione 100% se chiusura > media 50 E rendimento 60 giorni > 0; altrimenti 0% (USD). Valuta a chiusura giornaliera, 1 cambio max/giorno, costo 0,15% a cambio. Nessuno stop discrezionale; uscita solo da regola. 2 parametri: 50, 60.",
+   "next_action": "backtest FAIL: drawdown 67% > 35%",
+   "id": "opp_81f8fe",
+   "stage": "validating",
+   "created": "2026-10-05T04:18:06+00:00",
+   "score": 1.9,
+   "updated": "2026-10-05T09:07:18+00:00"
+  }
+ ],
+ "approvals": [],
+ "ledger": [],
+ "directives": [],
+ "blockers": [],
+ "log": [
+  {
+   "ts": "2026-10-04T00:26:43+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo 1"
+  },
+  {
+   "ts": "2026-10-04T00:28:48+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_82966b '' score=0.0 [idea]"
+  },
+  {
+   "ts": "2026-10-04T00:28:49+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_82966b '' score=0.0 [idea]"
+  },
+  {
+   "ts": "2026-10-04T00:29:03+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_b6a213 '' score=0.0 [idea]"
+  },
+  {
+   "ts": "2026-10-04T00:30:30+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_e22cd5 '' score=0.0 [validating]"
+  },
+  {
+   "ts": "2026-10-04T00:30:31+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_74ac68 '' score=0.0 [building]"
+  },
+  {
+   "ts": "2026-10-04T00:30:51+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_6d3207 '' score=0.0 [awaiting_approval]"
+  },
+  {
+   "ts": "2026-10-04T00:31:19+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_9cd45c '' score=0.0 [live]"
+  },
+  {
+   "ts": "2026-10-04T00:31:48+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_de38db '' score=0.0 [scaling]"
+  },
+  {
+   "ts": "2026-10-04T00:31:49+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_e22cd5 '' score=0.0 [validating]"
+  },
+  {
+   "ts": "2026-10-04T00:32:19+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_74ac68 '' score=0.0 [building]"
+  },
+  {
+   "ts": "2026-10-04T00:32:51+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_6d3207 '' score=0.0 [awaiting_approval]"
+  },
+  {
+   "ts": "2026-10-04T00:32:52+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_7b472f '' score=0.0 [*]"
+  },
+  {
+   "ts": "2026-10-04T00:33:54+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_4238c0 '' score=0.0 [idea]"
+  },
+  {
+   "ts": "2026-10-04T00:34:03+00:00",
+   "agent": "ceo",
+   "msg": "opportunità opp_6cb9fe '' score=0.0 [validating]"
+  },
+  {
+   "ts": "2026-10-04T00:39:03+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 1: Backtest completati: entrambe le strategie non superano il buy‑and‑hold."
+  },
+  {
+   "ts": "2026-10-04T00:39:38+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.0000$ / 138278 token"
+  },
+  {
+   "ts": "2026-10-04T00:49:22+00:00",
+   "agent": "human",
+   "msg": "opp_82966b → killed"
+  },
+  {
+   "ts": "2026-10-04T00:49:22+00:00",
+   "agent": "human",
+   "msg": "opp_b6a213 → killed"
+  },
+  {
+   "ts": "2026-10-04T00:49:23+00:00",
+   "agent": "human",
+   "msg": "opp_e22cd5 → killed"
+  },
+  {
+   "ts": "2026-10-04T00:49:23+00:00",
+   "agent": "human",
+   "msg": "opp_74ac68 → killed"
+  },
+  {
+   "ts": "2026-10-04T00:49:23+00:00",
+   "agent": "human",
+   "msg": "opp_6d3207 → killed"
+  },
+  {
+   "ts": "2026-10-04T00:49:23+00:00",
+   "agent": "human",
+   "msg": "opp_9cd45c → killed"
+  },
+  {
+   "ts": "2026-10-04T00:49:23+00:00",
+   "agent": "human",
+   "msg": "opp_de38db → killed"
+  },
+  {
+   "ts": "2026-10-04T00:49:23+00:00",
+   "agent": "human",
+   "msg": "opp_7b472f → killed"
+  },
+  {
+   "ts": "2026-10-04T00:49:23+00:00",
+   "agent": "human",
+   "msg": "opp_4238c0 → killed"
+  },
+  {
+   "ts": "2026-10-04T00:49:23+00:00",
+   "agent": "human",
+   "msg": "opp_6cb9fe → killed"
+  },
+  {
+   "ts": "2026-10-04T02:52:31+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo vendite"
+  },
+  {
+   "ts": "2026-10-04T02:55:57+00:00",
+   "agent": "yield-scout",
+   "msg": "Identified 3 stablecoin protocols with APY >10%: Saturn, APYX, Accountable. No public audit links found."
+  },
+  {
+   "ts": "2026-10-04T02:56:22+00:00",
+   "agent": "engine",
+   "msg": "ciclo terminato con errore AI runner 1"
+  },
+  {
+   "ts": "2026-10-04T02:56:22+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.0000$ / 0 token"
+  },
+  {
+   "ts": "2026-10-04T07:24:29+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 1: saltato: NIENTE DA FARE: nessuna strategia in paper trading o live di cui parlare"
+  },
+  {
+   "ts": "2026-10-04T08:28:10+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo 2"
+  },
+  {
+   "ts": "2026-10-04T08:28:28+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 2: Nessuna strategia pronta: due idee in backtest, nessuna in paper o live."
+  },
+  {
+   "ts": "2026-10-04T08:28:29+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.0000$ / 13694 token"
+  },
+  {
+   "ts": "2026-10-04T15:12:47+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo 3"
+  },
+  {
+   "ts": "2026-10-04T15:17:32+00:00",
+   "agent": "engine",
+   "msg": "ciclo terminato con errore AI runner 1"
+  },
+  {
+   "ts": "2026-10-04T15:17:32+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.0000$ / 0 token"
+  },
+  {
+   "ts": "2026-10-04T20:37:15+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo 4"
+  },
+  {
+   "ts": "2026-10-04T20:38:25+00:00",
+   "agent": "market-scanner",
+   "msg": "mercato BTC 1h mean-reversion score=48.8"
+  },
+  {
+   "ts": "2026-10-04T20:38:37+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 4: Trovata una nuova idea di mean reversion su BTC a 1 ora, ancora da trasformare in strategia."
+  },
+  {
+   "ts": "2026-10-04T20:38:37+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 4: scansione mercati: nuovo mercato BTC 1h mean-reversion"
+  },
+  {
+   "ts": "2026-10-04T20:38:40+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.1615$ / 346743 token (market-scanner 0.09$, ceo 0.07$)"
+  },
+  {
+   "ts": "2026-10-04T22:38:50+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo 5"
+  },
+  {
+   "ts": "2026-10-04T22:38:59+00:00",
+   "agent": "quant-analyst",
+   "msg": "opportunità opp_9ec635 'Mean-reversion BTC-USD 1h (z-score 48, entrata -2)' score=0.7 [idea]"
+  },
+  {
+   "ts": "2026-10-04T22:39:11+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 5: idea mean-reversion BTC registrata, backtest al prossimo ciclo"
+  },
+  {
+   "ts": "2026-10-04T22:39:14+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 5: Nuova idea di strategia su Bitcoin (ritorno alla media, 1 ora) registrata, ancora da testare."
+  },
+  {
+   "ts": "2026-10-04T22:39:16+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.1545$ / 251379 token (ceo 0.13$, quant-analyst 0.03$)"
+  },
+  {
+   "ts": "2026-10-04T22:40:47+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo vendite"
+  },
+  {
+   "ts": "2026-10-04T22:40:51+00:00",
+   "agent": "yield-lead",
+   "msg": "fine ciclo 5: Nessuna proposta nuova: i rendimenti alti non sono abbastanza affidabili"
+  },
+  {
+   "ts": "2026-10-04T22:40:51+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 5: rendite: nessuna proposta, rendimenti alti senza audit"
+  },
+  {
+   "ts": "2026-10-04T22:40:53+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.0571$ / 86799 token (yield-lead 0.06$)"
+  },
+  {
+   "ts": "2026-10-04T23:05:09+00:00",
+   "agent": "human",
+   "msg": "opportunità opp_9ec635 → live (issue #1)"
+  },
+  {
+   "ts": "2026-10-04T23:52:14+00:00",
+   "agent": "engine",
+   "msg": "opp_9ec635 non era approvata per il live → validating"
+  },
+  {
+   "ts": "2026-10-04T23:52:17+00:00",
+   "agent": "engine",
+   "msg": "Claude senza quota (You've hit your session limit · resets 12:40am (UTC)): ciclo eseguito con il router AI"
+  },
+  {
+   "ts": "2026-10-04T23:52:20+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo vendite"
+  },
+  {
+   "ts": "2026-10-04T23:52:20+00:00",
+   "agent": "yield-lead",
+   "msg": "fine ciclo 5: Nessuna proposta nuova: i rendimenti alti non sono abbastanza affidabili"
+  },
+  {
+   "ts": "2026-10-04T23:52:28+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.0000$ / 14003 token"
+  },
+  {
+   "ts": "2026-10-05T00:46:14+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo 6"
+  },
+  {
+   "ts": "2026-10-05T00:46:32+00:00",
+   "agent": "quant-dev",
+   "msg": "opp_9ec635 → validating"
+  },
+  {
+   "ts": "2026-10-05T00:46:37+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 6: Backtest della strategia Ritorno alla media su Bitcoin completato: risultato positivo ma modesto"
+  },
+  {
+   "ts": "2026-10-05T00:46:39+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.1306$ / 172324 token (ceo 0.08$, quant-dev 0.05$)"
+  },
+  {
+   "ts": "2026-10-05T00:49:35+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo vendite"
+  },
+  {
+   "ts": "2026-10-05T00:49:39+00:00",
+   "agent": "yield-lead",
+   "msg": "fine ciclo 6: Nessuna proposta nuova: i rendimenti restano poco affidabili"
+  },
+  {
+   "ts": "2026-10-05T00:49:39+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 6: Nessuna proposta nuova: dati invariati, rendimenti alti non affidabili"
+  },
+  {
+   "ts": "2026-10-05T00:49:41+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.0569$ / 86961 token (yield-lead 0.06$)"
+  },
+  {
+   "ts": "2026-10-05T01:05:18+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo 7"
+  },
+  {
+   "ts": "2026-10-05T01:05:37+00:00",
+   "agent": "risk-manager",
+   "msg": "opp_9ec635 → building"
+  },
+  {
+   "ts": "2026-10-05T01:05:42+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 7: La strategia Ritorno alla media su Bitcoin passa al paper trading (soldi finti)"
+  },
+  {
+   "ts": "2026-10-05T01:05:42+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 7: opp_9ec635 passata a paper trading"
+  },
+  {
+   "ts": "2026-10-05T01:05:44+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.1021$ / 178528 token (ceo 0.08$, risk-manager 0.03$)"
+  },
+  {
+   "ts": "2026-10-05T01:07:23+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo vendite"
+  },
+  {
+   "ts": "2026-10-05T01:07:26+00:00",
+   "agent": "yield-lead",
+   "msg": "fine ciclo 7: Nessuna proposta nuova: i rendimenti restano poco affidabili"
+  },
+  {
+   "ts": "2026-10-05T01:07:26+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 7: Nessuna proposta nuova: rendimenti invariati e poco affidabili"
+  },
+  {
+   "ts": "2026-10-05T01:07:29+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.0580$ / 87206 token (yield-lead 0.06$)"
+  },
+  {
+   "ts": "2026-10-05T02:17:51+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo 8"
+  },
+  {
+   "ts": "2026-10-05T02:18:49+00:00",
+   "agent": "market-scanner",
+   "msg": "mercato ETH 1d momentum-rotation score=45.3"
+  },
+  {
+   "ts": "2026-10-05T02:18:50+00:00",
+   "agent": "market-scanner",
+   "msg": "mercato SOL 1d momentum-rotation score=55.6"
+  },
+  {
+   "ts": "2026-10-05T02:18:53+00:00",
+   "agent": "market-scanner",
+   "msg": "mercato SOL 1d smart-dca score=46.9"
+  },
+  {
+   "ts": "2026-10-05T02:19:05+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 8: Analizzati Ethereum e Solana: trovate 3 nuove idee da trasformare in strategie"
+  },
+  {
+   "ts": "2026-10-05T02:19:08+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.1833$ / 402200 token (ceo 0.11$, market-scanner 0.07$)"
+  },
+  {
+   "ts": "2026-10-05T04:17:57+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo 9"
+  },
+  {
+   "ts": "2026-10-05T04:18:06+00:00",
+   "agent": "quant-analyst",
+   "msg": "opportunità opp_81f8fe 'Momentum SOL 1d (ROC 60 + media 50)' score=1.9 [idea]"
+  },
+  {
+   "ts": "2026-10-05T04:18:31+00:00",
+   "agent": "market-scanner",
+   "msg": "mercato XRP 1d volatility-regime score=47.2"
+  },
+  {
+   "ts": "2026-10-05T04:18:35+00:00",
+   "agent": "market-scanner",
+   "msg": "mercato ADA 1d volatility-regime score=33.6"
+  },
+  {
+   "ts": "2026-10-05T04:18:35+00:00",
+   "agent": "market-scanner",
+   "msg": "mercato CRO 1d volatility-regime score=25.0"
+  },
+  {
+   "ts": "2026-10-05T04:18:50+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 9: Studiati XRP, ADA e CRO; nuova idea di strategia su Solana pronta per il test"
+  },
+  {
+   "ts": "2026-10-05T04:18:50+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 9: Analizzati XRP/ADA/CRO; definita strategia Momentum SOL"
+  },
+  {
+   "ts": "2026-10-05T04:18:53+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.1955$ / 363782 token (ceo 0.11$, market-scanner 0.05$, quant-analyst 0.03$)"
+  },
+  {
+   "ts": "2026-10-05T09:07:05+00:00",
+   "agent": "engine",
+   "msg": "inizio ciclo 10"
+  },
+  {
+   "ts": "2026-10-05T09:07:18+00:00",
+   "agent": "quant-dev",
+   "msg": "opp_81f8fe → validating"
+  },
+  {
+   "ts": "2026-10-05T09:07:23+00:00",
+   "agent": "ceo",
+   "msg": "lezione registrata: Momentum SOL 1d (ROC60+media50): backtest FAIL, drawdown 67% vs 76% hold, rende "
+  },
+  {
+   "ts": "2026-10-05T09:07:23+00:00",
+   "agent": "ceo",
+   "msg": "fine ciclo 10: Momentum su Solana testata: non supera i controlli, drawdown troppo alto (67%)."
+  },
+  {
+   "ts": "2026-10-05T09:07:25+00:00",
+   "agent": "engine",
+   "msg": "costo AI 0.1291$ / 154695 token (ceo 0.08$, quant-dev 0.05$)"
+  }
+ ],
+ "reports": [
+  {
+   "cycle": 1,
+   "team": "trading",
+   "ts": "2026-10-04T00:39:03+00:00",
+   "headline": "Backtest completati: entrambe le strategie non superano il buy‑and‑hold.",
+   "done": [
+    "Trend‑following BTC: +87,5% contro +322,9% del buy‑and‑hold",
+    "Mean‑reversion ETH: -30,6% contro +80,2% del buy‑and‑hold",
+    "Entrambe le strategie restano in fase di validazione"
+   ],
+   "next": [
+    "Quant‑dev corregge le regole di trend‑following e mean‑reversion",
+    "Nuovo backtest per verificare se migliorano rispetto al buy‑and‑hold"
+   ],
+   "needs_you": [],
+   "usd": 0.0
+  },
+  {
+   "cycle": 2,
+   "team": "trading",
+   "ts": "2026-10-04T08:28:28+00:00",
+   "headline": "Nessuna strategia pronta: due idee in backtest, nessuna in paper o live.",
+   "done": [
+    "Inbox plancia svuotata",
+    "Verificato che il ciclo può partire",
+    "Nessuna strategia in paper trading o live da monitorare"
+   ],
+   "next": [
+    "Quant-dev: far avanzare momentum-rotation e smart-dca verso backtest validi",
+    "Se un backtest PASS, risk-manager lo controlla e si passa al paper trading"
+   ],
+   "needs_you": [],
+   "usd": 0.0
+  },
+  {
+   "cycle": 4,
+   "team": "trading",
+   "ts": "2026-10-04T20:38:37+00:00",
+   "headline": "Trovata una nuova idea di mean reversion su BTC a 1 ora, ancora da trasformare in strategia.",
+   "done": [
+    "Il market-scanner ha analizzato BTC, ETH e SOL con dati reali e registrato un nuovo mercato: BTC a 1 ora, che tende a tornare verso la media"
+   ],
+   "next": [
+    "Far scrivere le regole precise della strategia al quant-analyst e testarla con il backtest"
+   ],
+   "needs_you": [],
+   "usd": 0.1615
+  },
+  {
+   "cycle": 5,
+   "team": "trading",
+   "ts": "2026-10-04T22:39:14+00:00",
+   "headline": "Nuova idea di strategia su Bitcoin (ritorno alla media, 1 ora) registrata, ancora da testare.",
+   "done": [
+    "Il quant-analyst ha scritto regole precise: compra quando il prezzo scende molto sotto la media, esce al ritorno o con stop al 3%.",
+    "Punteggio prudente basso: i costi di scambio, 0,3% andata e ritorno, potrebbero mangiare il guadagno."
+   ],
+   "next": [
+    "Il quant-dev scrive la strategia e fa il backtest, provando anche 4h e 6h, per vedere se regge i costi."
+   ],
+   "needs_you": [],
+   "usd": 0.1545
+  },
+  {
+   "cycle": 5,
+   "team": "rendite",
+   "ts": "2026-10-04T23:52:20+00:00",
+   "headline": "Nessuna proposta nuova: i rendimenti alti non sono abbastanza affidabili",
+   "done": [
+    "Analisi rendimenti pubblici: Saturn, APYX, Accountable sopra il 10% ma senza audit pubblici verificabili"
+   ],
+   "next": [
+    "Monitorare i rendimenti e attendere segnali di maggiore affidabilità"
+   ],
+   "needs_you": [],
+   "usd": 0.0
+  },
+  {
+   "cycle": 6,
+   "team": "trading",
+   "ts": "2026-10-05T00:46:37+00:00",
+   "headline": "Backtest della strategia Ritorno alla media su Bitcoin completato: risultato positivo ma modesto",
+   "done": [
+    "Scritta e testata la strategia Ritorno alla media su Bitcoin (1 ora): +2,9% in circa 3 mesi, perdita massima 3%, 38 operazioni",
+    "Nel periodo di prova fuori campione il guadagno è solo +0,7%; il semplice tenere Bitcoin avrebbe fatto +39,1%"
+   ],
+   "next": [
+    "Il risk-manager valuta se passarla al paper trading, perché il test è breve e il margine è piccolo"
+   ],
+   "needs_you": [],
+   "usd": 0.1306
+  },
+  {
+   "cycle": 6,
+   "team": "rendite",
+   "ts": "2026-10-05T00:49:39+00:00",
+   "headline": "Nessuna proposta nuova: i rendimenti restano poco affidabili",
+   "done": [
+    "Controllati i rendimenti di oggi: le stablecoin oltre il 10% non hanno audit pubblici verificabili",
+    "Lo staking su Solana resta intorno al 5%, in linea con i giorni scorsi"
+   ],
+   "next": [
+    "Ricontrollare i rendimenti al prossimo ciclo",
+    "Valutare una proposta prudente solo se compaiono fonti ufficiali e audit"
+   ],
+   "needs_you": [],
+   "usd": 0.0569
+  },
+  {
+   "cycle": 7,
+   "team": "trading",
+   "ts": "2026-10-05T01:05:42+00:00",
+   "headline": "La strategia Ritorno alla media su Bitcoin passa al paper trading (soldi finti)",
+   "done": [
+    "Il controllo rischi ha dato ok alla strategia Ritorno alla media su Bitcoin: backtest positivo ma modesto (+0,7%, calo massimo 2,6%)",
+    "Ora parte il paper trading, cioè prove simulate senza soldi veri"
+   ],
+   "next": [
+    "Seguire il paper trading per almeno 14 giorni prima di valutare qualsiasi passo verso il live"
+   ],
+   "needs_you": [],
+   "usd": 0.1021
+  },
+  {
+   "cycle": 7,
+   "team": "rendite",
+   "ts": "2026-10-05T01:07:26+00:00",
+   "headline": "Nessuna proposta nuova: i rendimenti restano poco affidabili",
+   "done": [
+    "Controllati i rendimenti pubblici di oggi: nessun cambiamento rispetto a ieri",
+    "I rendimenti sopra il 10% sulle stablecoin restano senza audit pubblici verificabili, quindi scartati",
+    "Lo staking su Solana (circa 5%) è affidabile ma non è cambiato nulla da proporre"
+   ],
+   "next": [
+    "Ricontrollare i rendimenti al prossimo ciclo e cercare fonti ufficiali sugli audit"
+   ],
+   "needs_you": [],
+   "usd": 0.058
+  },
+  {
+   "cycle": 8,
+   "team": "trading",
+   "ts": "2026-10-05T02:19:05+00:00",
+   "headline": "Analizzati Ethereum e Solana: trovate 3 nuove idee da trasformare in strategie",
+   "done": [
+    "Studiati i mercati di Ethereum e Solana su dati giornalieri",
+    "Registrate 3 ipotesi, la migliore è la rotazione sul momentum di Solana",
+    "Il paper trading (soldi finti) del Ritorno alla media su Bitcoin è appena partito"
+   ],
+   "next": [
+    "Trasformare la idea su Solana in regole precise da testare con un backtest",
+    "Studiare XRP, ADA e CRO, non analizzati da oltre 14 giorni"
+   ],
+   "needs_you": [],
+   "usd": 0.1833
+  },
+  {
+   "cycle": 9,
+   "team": "trading",
+   "ts": "2026-10-05T04:18:50+00:00",
+   "headline": "Studiati XRP, ADA e CRO; nuova idea di strategia su Solana pronta per il test",
+   "done": [
+    "Analizzati XRP, ADA e CRO: XRP è il candidato migliore, CRO il meno liquido",
+    "Definita una nuova strategia Momentum SOL (solo acquisti, senza leva), ancora da testare"
+   ],
+   "next": [
+    "Far scrivere e testare al backtest la strategia Momentum SOL, per avere numeri veri",
+    "Continuare il paper trading della strategia Mean-reversion BTC"
+   ],
+   "needs_you": [],
+   "usd": 0.1955
+  },
+  {
+   "cycle": 10,
+   "team": "trading",
+   "ts": "2026-10-05T09:07:23+00:00",
+   "headline": "Momentum su Solana testata: non supera i controlli, drawdown troppo alto (67%).",
+   "done": [
+    "Backtest della strategia Momentum SOL: +274% contro +299% del semplice compra-e-tieni, ma con perdite massime del 67%",
+    "Mean-reversion BTC resta in paper trading (simulato), ancora troppo presto per giudicare"
+   ],
+   "next": [
+    "Un solo tentativo di correzione onesta su Momentum SOL, altrimenti scartarla",
+    "Continuare il paper trading di Mean-reversion BTC"
+   ],
+   "needs_you": [],
+   "usd": 0.1291
+  }
+ ],
+ "learnings": [
+  {
+   "id": "lrn_3cb423",
+   "ts": "2026-10-05T09:07:23+00:00",
+   "agent": "ceo",
+   "text": "Momentum SOL 1d (ROC60+media50): backtest FAIL, drawdown 67% vs 76% hold, rende meno del buy&hold (+274% vs +299%)"
+  }
+ ],
+ "focus": null,
+ "last_run": {
+  "trading": "2026-10-05T09:07:03+00:00",
+  "rendite": "2026-10-05T01:07:22+00:00"
+ },
+ "skips": {
+  "trading": 0,
+  "rendite": 0,
+  "social": 1
+ },
+ "last_skip": {
+  "ts": "2026-10-04T07:24:29+00:00",
+  "reason": "NIENTE DA FARE: nessuna strategia in paper trading o live di cui parlare"
+ },
+ "checks": {
+  "ts": "2026-10-05T09:07:05+00:00",
+  "items": []
+ },
+ "signals": [],
+ "traffic": {
+  "boots": {
+   "20261005104724-15b43c": {
+    "seen": "2026-10-05T12:23:40+00:00",
+    "counts": {}
+   }
+  }
+ }
+}

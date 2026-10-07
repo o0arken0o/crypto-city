@@ -1,0 +1,3 @@
+# La plancia e il motore usano solo la libreria standard di Python.
+# PyNaCl serve solo alla plancia per cifrare i token salvati come secret di GitHub (casella "Collegamenti").
+PyNaCl>=1.5

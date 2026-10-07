@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+state/.lock
+state/*.tmp
+state/market/*.tmp
+products/*/*.tmp
+node_modules/
+_site/
+.env
+state/live.json
+.venv/
+dashboard/.crypto-city-backups/
+.crypto-city-local.json

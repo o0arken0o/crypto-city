@@ -1,0 +1,17 @@
+{
+  "name": "crypto-machine",
+  "version": "0.1.0",
+  "description": "Team di agenti crypto prudenti: studiano i mercati, testano strategie con backtest e paper trading su prezzi reali e propongono al proprietario solo ciò che ha superato le prove. Nessun ordine automatico, plancia 3D e approvazione umana.",
+  "author": {
+    "name": "reveracontatti-create"
+  },
+  "repository": "https://github.com/o0arken0o/crypto-machine",
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "crypto",
+    "backtest",
+    "paper-trading",
+    "dashboard"
+  ]
+}

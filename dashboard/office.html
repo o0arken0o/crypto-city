@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050a18">
+<title>Sala trading Crypto Machine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{"imports":{"three":"./vendor/three/three.module.min.js",
+            "three/addons/":"./vendor/three/addons/"}}
+</script>
+</head>
+<body>
+<script type="module">
+// Trading room, "exchange" look (shared shell in exchange.js): a holographic globe with the analysed markets, a glowing
+// track Idea → Backtest → Paper trading → Live with the strategies on it, agent desks, chart walls, glass panels.
+import { createRoom, THREE, BLUE, CYAN, GREEN, GOLD, glow, canvasTex, label, eur, DEMO } from "./exchange.js";
+import { priceTicker } from "./scene3d.js";
+
+const AGENTS = [
+  ["ceo", "CEO", 0xffc35a], ["market-scanner", "Market Scanner", 0x3aa0ff], ["quant-analyst", "Quant", 0x9b7bff], ["onchain-analyst", "On-chain", 0x2fd5c9],
+  ["quant-dev", "Quant Dev", 0xff9f43], ["risk-manager", "Rischio", 0x2fd59b], ["ethics-guard", "Etica", 0xff6b81],
+];
+const STAGES = [["IDEA", ["idea"]], ["BACKTEST", ["validating"]], ["PAPER TRADING", ["building", "awaiting_approval"]], ["LIVE", ["live", "scaling"]]];
+const STAGE_IT = { idea: "Idea", validating: "Backtest", building: "Paper trading", awaiting_approval: "Da approvare", live: "Live (segnali)", scaling: "In crescita" };
+const room = createRoom({
+  team: "trading", sub: "Sala trading", lead: "ceo", agents: AGENTS, reportTitle: "Ultimo resoconto del CEO",
+  spots: [[-6.2, -9.4, Math.PI], [-2.2, -9.4, Math.PI], [5.4, -9.4, Math.PI], [-11.4, -6.2, -Math.PI / 2], [-11.4, -1.4, -Math.PI / 2], [-11.4, 2.8, -Math.PI / 2], [-11.4, 7, -Math.PI / 2]],
+  cron: [17, [22, 0, 2, 4]],  // keep in sync with .github/workflows/crypto-cycle.yml
+  kv: [["kRev", "Risultati reali"], ["kAi", "Budget AI oggi", true], ["kStrat", "Strategie"], ["kApr", "Da approvare · scartate"]],
+  nav: [["sales.html", "Sala rendite"], ["/plancia", "Plancia"]],
+  world, demo,
+});
+const { scene, screen, showCard, XW, ZW } = room;
+const $ = s => document.querySelector(s);
+
+// ---------------------------------------------------------------- wall screens: real candles (Coinbase, refreshed every minute) + live price ticker
+const leftScreen = screen(7.6, 3.5, room.liveChart(2048, 940, "BTC-EUR", "1h", "BTC · EUR · 1 ora"), XW + .05, 3.7, -3.2, Math.PI / 2);
+priceTicker(leftScreen, { x: 0, y: 2.2, z: .05, width: 7.6, demo: DEMO });
+screen(3.2, 1.9, room.liveChart(1024, 608, "ETH-EUR", "1h", "ETH · 1 ora", "#9b7bff"), XW + .05, 3.6, 4.3, Math.PI / 2);
+screen(3.4, 2, room.liveChart(1024, 600, "SOL-EUR", "1h", "SOL · 1 ora", "#4fd2ff"), -5.8, 4.2, ZW + .05, 0);
+// last 24 hours of the six coins of the universe, from real hourly candles
+room.extraPairs.push("XRP-EUR|1h", "ADA-EUR|1h", "CRO-EUR|1h");
+const moveTex = canvasTex(1024, 600, () => {});
+function drawMoves() {
+  const g = moveTex.userData.canvas.getContext("2d"), w = 1024, h = 600;
+  g.fillStyle = "#030918"; g.fillRect(0, 0, w, h); g.fillStyle = "#cfe3ff"; g.font = "600 40px Chakra Petch, sans-serif"; g.textAlign = "left"; g.fillText("VARIAZIONE 24 ORE", 28, 56);
+  const rows = ["BTC", "ETH", "SOL", "XRP", "ADA", "CRO"].map(a => { const cs = ((room.chartData[a + "-EUR1h"] || {}).candles || []).slice(-25); return [a, cs.length > 1 ? (cs[cs.length - 1][4] / cs[0][4] - 1) * 100 : null]; });
+  if (DEMO) rows.forEach((r, i) => { r[1] = [1.8, -.9, 3.2, 2.3, 7.9, 3.9][i]; });
+  const max = Math.max(2, ...rows.map(r => Math.abs(r[1] || 0)));
+  rows.forEach(([a, v], i) => {
+    const y = 130 + i * 78, mid = w / 2 + 40;
+    g.fillStyle = "#e6efff"; g.font = "700 38px Chakra Petch, sans-serif"; g.fillText(a, 28, y + 14);
+    if (v == null) { g.fillStyle = "#8ea3c8"; g.font = "500 34px Chakra Petch, sans-serif"; g.fillText("dati non disponibili", 200, y + 14); return; }
+    const len = Math.abs(v) / max * (w / 2 - 170); g.fillStyle = v >= 0 ? "#2fd59b" : "#ff4d6a";
+    g.fillRect(v >= 0 ? mid : mid - len, y - 20, len, 40);
+    g.font = "700 32px Chakra Petch, sans-serif"; g.textAlign = v >= 0 ? "left" : "right"; g.fillText((v >= 0 ? "+" : "") + v.toFixed(2).replace(".", ",") + "%", v >= 0 ? mid + len + 14 : mid - len - 14, y + 14); g.textAlign = "left";
+  });
+  g.strokeStyle = "rgba(86,160,255,.4)"; g.beginPath(); g.moveTo(w / 2 + 40, 100); g.lineTo(w / 2 + 40, h - 40); g.stroke();
+  moveTex.needsUpdate = true;
+}
+drawMoves(); setInterval(drawMoves, 15000);
+screen(3.4, 2, moveTex, 8.8, 4.2, ZW + .05, 0);
+
+// ---------------------------------------------------------------- holographic globe on a pedestal, the track and the strategies
+const globeLight = new THREE.PointLight(BLUE, 12, 11, 2); globeLight.position.set(0, 3.6, 0); scene.add(globeLight);
+const LAND = [  // simplified continents, [lon, lat]
+  [[-168, 65], [-160, 71], [-140, 70], [-125, 70], [-95, 72], [-80, 73], [-65, 60], [-55, 52], [-66, 45], [-75, 35], [-81, 25], [-90, 29], [-97, 26], [-105, 20], [-95, 16], [-85, 10], [-80, 9], [-92, 15], [-105, 22], [-112, 30], [-117, 33], [-124, 40], [-124, 48], [-135, 58], [-150, 60], [-165, 62]],
+  [[-50, 60], [-42, 60], [-20, 70], [-20, 80], [-40, 83], [-60, 80], [-70, 77], [-55, 70]],
+  [[-80, 9], [-75, 11], [-62, 10], [-50, 0], [-35, -5], [-38, -13], [-40, -22], [-48, -26], [-58, -35], [-65, -42], [-68, -55], [-75, -50], [-73, -40], [-71, -30], [-70, -18], [-76, -14], [-81, -5], [-80, 0]],
+  [[-10, 36], [-9, 43], [-2, 44], [-5, 48], [2, 51], [8, 54], [10, 58], [5, 62], [15, 69], [25, 71], [40, 68], [45, 60], [40, 45], [30, 45], [28, 41], [23, 38], [20, 40], [15, 38], [12, 44], [8, 44], [3, 43], [-1, 37]],
+  [[-5, 50], [1, 51], [0, 54], [-3, 58], [-6, 57], [-5, 54]],
+  [[-17, 15], [-17, 21], [-10, 29], [-6, 36], [10, 37], [20, 32], [32, 31], [35, 28], [43, 12], [51, 12], [42, 0], [40, -10], [35, -24], [27, -34], [19, -35], [13, -20], [12, -5], [9, 4], [-8, 5], [-15, 10]],
+  [[44, -25], [50, -15], [49, -12], [44, -17]],
+  [[28, 41], [36, 36], [35, 30], [44, 13], [55, 17], [57, 24], [66, 25], [72, 20], [77, 8], [80, 15], [90, 22], [95, 16], [98, 8], [104, 1], [105, 10], [109, 12], [108, 21], [122, 30], [121, 40], [129, 35], [130, 43], [140, 48], [142, 53], [135, 55], [155, 59], [163, 60], [180, 66], [180, 72], [140, 73], [110, 77], [80, 73], [68, 70], [60, 69], [45, 68], [40, 68], [45, 60], [40, 45]],
+  [[130, 31], [135, 34], [140, 36], [142, 41], [141, 45], [139, 42], [136, 36], [131, 34]],
+  [[95, 5], [105, -6], [115, -8], [120, -9], [125, -8], [140, -3], [150, -6], [140, -9], [120, -10], [106, -7], [100, -1]],
+  [[114, -22], [122, -18], [130, -12], [137, -12], [142, -11], [146, -19], [153, -25], [151, -34], [146, -39], [138, -35], [131, -31], [115, -34]],
+  [[166, -46], [172, -41], [175, -37], [178, -38], [174, -42], [168, -47]],
+  [[-180, -70], [180, -70], [180, -90], [-180, -90]],
+];
+function earthTexture() {
+  const W = 2048, Hh = 1024, X = lon => (lon + 180) / 360 * W, Y = lat => (90 - lat) / 180 * Hh;
+  const mask = document.createElement("canvas"); mask.width = W; mask.height = Hh; const m = mask.getContext("2d");
+  m.fillStyle = "#fff"; for (const poly of LAND) { m.beginPath(); poly.forEach(([lo, la], i) => i ? m.lineTo(X(lo), Y(la)) : m.moveTo(X(lo), Y(la))); m.closePath(); m.fill(); }
+  const land = m.getImageData(0, 0, W, Hh).data;
+  return canvasTex(W, Hh, g => {
+    g.fillStyle = "#04102a"; g.fillRect(0, 0, W, Hh);
+    g.strokeStyle = "rgba(79,170,255,.3)"; g.lineWidth = 2;
+    for (let lo = -180; lo <= 180; lo += 30) { g.beginPath(); g.moveTo(X(lo), 0); g.lineTo(X(lo), Hh); g.stroke(); }
+    for (let la = -60; la <= 60; la += 30) { g.beginPath(); g.moveTo(0, Y(la)); g.lineTo(W, Y(la)); g.stroke(); }
+    const step = 9;
+    for (let y = step / 2; y < Hh; y += step) {
+      const k = Math.max(.25, Math.cos((90 - y / Hh * 180) * Math.PI / 180));
+      for (let x = step / 2; x < W; x += step / k) {
+        if (!land[(Math.floor(y) * W + Math.floor(x)) * 4]) continue;
+        g.fillStyle = (x * 7 + y * 3) % 13 < 1 ? "#ffffff" : "#5ab4ff"; g.fillRect(x - 2.4, y - 2.4 * k, 4.8, 4.8 * k);
+      }
+    }
+  });
+}
+const globe = new THREE.Group(); globe.position.set(0, 0, 0); scene.add(globe);
+{
+  const ped = new THREE.MeshStandardMaterial({ color: 0x0b1733, metalness: .85, roughness: .25 });
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.5, .5, 64), ped); base.position.y = .25; globe.add(base);
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.9, .35, 64), ped); top.position.y = .67; globe.add(top);
+  for (const [r, y] of [[2.32, .5], [1.72, .86]]) { const ring = new THREE.Mesh(new THREE.TorusGeometry(r, .03, 8, 96), glow(BLUE)); ring.rotation.x = Math.PI / 2; ring.position.y = y; globe.add(ring); }
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, 1.3, 48, 1, true), new THREE.MeshBasicMaterial({ color: BLUE, transparent: true, opacity: .1, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
+  beam.position.y = 1.5; globe.add(beam);
+}
+const earthMap = earthTexture();
+const sphere = new THREE.Mesh(new THREE.SphereGeometry(2.2, 64, 40), new THREE.MeshStandardMaterial({ map: earthMap, emissiveMap: earthMap, emissive: 0xffffff, emissiveIntensity: .7, roughness: .4, metalness: .2, transparent: true, opacity: .95 }));
+sphere.position.y = 3.6; globe.add(sphere);
+const wire = new THREE.Mesh(new THREE.SphereGeometry(2.32, 28, 20), new THREE.MeshBasicMaterial({ color: CYAN, wireframe: true, transparent: true, opacity: .05 })); wire.position.y = 3.6; globe.add(wire);
+const halo = new THREE.Mesh(new THREE.SphereGeometry(2.5, 48, 32), new THREE.MeshBasicMaterial({ color: BLUE, transparent: true, opacity: .1, side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false })); halo.position.y = 3.6; globe.add(halo);
+const orbits = [];
+for (const [r, tilt] of [[2.9, .35], [3.2, -.5]]) {
+  const o = new THREE.Mesh(new THREE.TorusGeometry(r, .015, 6, 160), new THREE.MeshBasicMaterial({ color: CYAN, transparent: true, opacity: .55, toneMapped: false }));
+  o.position.y = 3.6; o.rotation.set(Math.PI / 2 + tilt, 0, 0); globe.add(o); orbits.push(o);
+}
+const marketDots = new THREE.Group(); sphere.add(marketDots);
+function setMarkets(ms) {  // the markets the agents analysed, as gold points on the globe (position from the name: decorative)
+  marketDots.clear();
+  (ms || []).slice(0, 14).forEach(m => {
+    let hsh = 0; for (const ch of m.name || "") hsh = (hsh * 31 + ch.charCodeAt(0)) >>> 0;
+    const lat = (hsh % 120 - 60) * Math.PI / 180, lon = (hsh >> 8) % 360 * Math.PI / 180, r = 2.23;
+    const d = new THREE.Mesh(new THREE.SphereGeometry(.06, 10, 8), glow(GOLD));
+    d.position.set(r * Math.cos(lat) * Math.cos(lon), r * Math.sin(lat), r * Math.cos(lat) * Math.sin(lon));
+    d.userData.onClick = () => showCard(m.name, [["Strategia", m.strategy || "—"], ["Punteggio", String(m.score ?? "—")], ["Perché", m.evidence || "—"]]);
+    marketDots.add(d);
+  });
+}
+
+// ---------------------------------------------------------------- the track: Idea → Backtest → Paper trading → Live
+// A raised rounded loop around the globe. Corners: D (left on screen) = Idea, C (front) between Backtest and Paper,
+// B (right) = Live. Strategies sit on it as glowing data blocks in their stage.
+const TW = 17, TD = 11, TR = 2.6, TY = .32, TCX = 0, TCZ = 0;
+function loopPoints(w, d, r, n = 240) {
+  const s = new THREE.Shape(); const x = -w / 2, z = -d / 2;
+  s.moveTo(x + r, z); s.lineTo(x + w - r, z); s.quadraticCurveTo(x + w, z, x + w, z + r); s.lineTo(x + w, z + d - r); s.quadraticCurveTo(x + w, z + d, x + w - r, z + d);
+  s.lineTo(x + r, z + d); s.quadraticCurveTo(x, z + d, x, z + d - r); s.lineTo(x, z + r); s.quadraticCurveTo(x, z, x + r, z);
+  return s.getSpacedPoints(n).map(p => new THREE.Vector3(p.x + TCX, 0, p.y + TCZ));
+}
+{
+  const outer = new THREE.Shape(loopPoints(TW + 1.6, TD + 1.6, TR + .8, 200).map(p => new THREE.Vector2(p.x, p.z)));
+  outer.holes.push(new THREE.Path(loopPoints(TW - 1.6, TD - 1.6, TR - .8, 200).map(p => new THREE.Vector2(p.x, p.z)).reverse()));
+  const deck = new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: TY, bevelEnabled: false }), new THREE.MeshStandardMaterial({ color: 0x08132c, metalness: .7, roughness: .3 }));
+  deck.rotation.x = Math.PI / 2; deck.position.y = TY; scene.add(deck);
+  for (const [w, d, r, rad] of [[TW + 1.6, TD + 1.6, TR + .8, .05], [TW - 1.6, TD - 1.6, TR - .8, .05], [TW, TD, TR, .015]]) {
+    const curve = new THREE.CatmullRomCurve3(loopPoints(w, d, r, 160).map(p => p.setY(TY + .03)), true);
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 320, rad, 6, true), glow(rad > .02 ? BLUE : CYAN)));
+  }
+}
+const lane = new THREE.CatmullRomCurve3(loopPoints(TW, TD, TR, 200).map(p => p.setY(TY + .02)), true);
+// flowing light dashes along the lane
+const DASHES = 46, dashes = new THREE.InstancedMesh(new THREE.BoxGeometry(.32, .02, .07), glow(CYAN), DASHES), dm = new THREE.Object3D();
+scene.add(dashes);
+function drawDashes(t) {
+  for (let i = 0; i < DASHES; i++) {
+    const u = ((i / DASHES - t * .012) % 1 + 1) % 1, p = lane.getPointAt(u), tg = lane.getTangentAt(u);
+    dm.position.copy(p); dm.rotation.set(0, Math.atan2(-tg.z, tg.x), 0); dm.updateMatrix(); dashes.setMatrixAt(i, dm.matrix);
+  }
+  dashes.instanceMatrix.needsUpdate = true;
+}
+// where each stage sits on the lane (fractions along the loop, starting at the back-left straight)
+const STAGE_U = [.77, .64, .41, .29];  // Idea (left corner), Backtest (front-left edge), Paper trading (front-right edge), Live (right corner): the flow runs backwards along the loop
+function floorText(text, u, size = 1, col = "#4fb3ff") {
+  const tex = canvasTex(1024, 200, (g, w, h) => {
+    g.font = "700 120px Chakra Petch, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.shadowColor = col; g.shadowBlur = 30; g.fillStyle = col; g.fillText(text, w / 2, h / 2); g.shadowBlur = 0; g.fillStyle = "#e9f5ff"; g.globalAlpha = .55; g.fillText(text, w / 2, h / 2);
+  });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(4.6 * size, .9 * size), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false }));
+  const p = lane.getPointAt(u), tg = lane.getTangentAt(u), out = new THREE.Vector3(tg.z, 0, -tg.x).normalize();
+  if (out.dot(new THREE.Vector3(p.x - TCX, 0, p.z - TCZ)) < 0) out.negate();
+  m.position.copy(p).addScaledVector(out, 1.55); m.position.y = .03;
+  m.rotation.x = -Math.PI / 2; m.rotation.z = Math.atan2(-tg.z, tg.x); if (Math.cos(m.rotation.z) < 0) m.rotation.z += Math.PI;
+  scene.add(m); return m;
+}
+STAGES.slice(0, 3).forEach(([name], i) => floorText(name, STAGE_U[i], .72));
+// LIVE: a glowing sign standing by the track
+{
+  const tex = canvasTex(512, 160, (g, w, h) => {
+    g.fillStyle = "#061430"; g.fillRect(0, 0, w, h); g.strokeStyle = "#4fb3ff"; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+    g.font = "700 96px Chakra Petch, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#cfe9ff"; g.shadowColor = "#3aa0ff"; g.shadowBlur = 24; g.fillText("LIVE", w / 2, h / 2 + 4);
+  });
+  const sign = new THREE.Mesh(new THREE.BoxGeometry(3, .95, .14), [0, 0, 0, 0, 1, 0].map(f => f ? new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }) : new THREE.MeshStandardMaterial({ color: 0x0b1733, metalness: .8, roughness: .3 })));
+  const p = lane.getPointAt(STAGE_U[3]); sign.position.set(p.x + 2.6, 1.3, p.z - .4); sign.rotation.y = Math.PI / 4; scene.add(sign);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .9), glow(BLUE)); post.position.set(sign.position.x, .45, sign.position.z); scene.add(post);
+}
+// strategies on the track
+const blocks = {};
+const blockGeo = new THREE.BoxGeometry(.6, .6, .6), edgeGeo = new THREE.EdgesGeometry(blockGeo);
+const STAGE_COL = { idea: 0x7a8db3, validating: 0x3aa0ff, building: 0x4fd2ff, awaiting_approval: GOLD, live: GREEN, scaling: GREEN };
+function setOpps(opps) {
+  const seen = new Set(), per = [0, 0, 0, 0];
+  for (const o of opps || []) {
+    const si = Math.max(0, STAGES.findIndex(s => s[1].includes(o.stage))); if (o.stage === "killed") continue;
+    seen.add(o.id);
+    let b = blocks[o.id];
+    if (!b) {
+      b = new THREE.Group();
+      b.add(new THREE.Mesh(blockGeo, new THREE.MeshStandardMaterial({ color: 0x0a1a3a, transparent: true, opacity: .75, metalness: .3, roughness: .2, emissive: 0x000000 })));
+      b.add(new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial({ color: BLUE, toneMapped: false })));
+      scene.add(b); blocks[o.id] = b;
+    }
+    const col = STAGE_COL[o.stage] || BLUE;
+    b.children[0].material.emissive.setHex(col).multiplyScalar(.35); b.children[1].material.color.setHex(col);
+    b.userData.onClick = () => showCard(o.title || o.id, [["Fase", STAGE_IT[o.stage] || o.stage], ["Risultati", o.perf || "ancora nessun test"], ["Prossimo passo", o.next || "—"]]);
+    const k = per[si]++, u = (STAGE_U[si] + (k - 1) * .022 + 1) % 1;
+    b.userData.target = lane.getPointAt(u).clone().setY(TY + .33);
+  }
+  for (const id of Object.keys(blocks)) if (!seen.has(id)) { scene.remove(blocks[id]); delete blocks[id]; }
+}
+
+
+
+// ---------------------------------------------------------------- right wall: order book, market clocks, fear & greed (all real)
+const T = (g, t, x, y, size, col = "#e6efff", w = 700) => { g.fillStyle = col; g.font = `${w} ${size}px Chakra Petch, sans-serif`; g.fillText(t, x, y); };
+const eu = v => Number(v).toLocaleString("it-IT", { maximumFractionDigits: v >= 1000 ? 0 : 2 }) + " €";
+let book = null;
+const bookP = room.panel(5.2, 3.9, room.X1 - .05, 3.4, -5, -Math.PI / 2, (g, W, H) => {
+  T(g, "ORDER BOOK · BTC/EUR", 30, 58, 42);
+  const b = DEMO ? { mid: 52587, bids: [...Array(14)].map((_, i) => [0, .2 + Math.abs(Math.sin(i * 1.7))]), asks: [...Array(14)].map((_, i) => [0, .2 + Math.abs(Math.cos(i * 1.3))]) } : book;
+  if (!b || !b.bids || !b.bids.length) { T(g, b && b.error ? "dati non disponibili" : "carico i dati…", 30, H / 2, 38, "#8ea3c8", 600); return; }
+  const max = Math.max(...b.bids.map(x => x[1]), ...b.asks.map(x => x[1]), 1e-9), half = W / 2 - 40, row = (H - 200) / 28;
+  b.asks.slice().reverse().forEach(([, q], i) => { g.fillStyle = "rgba(255,77,106,.85)"; g.fillRect(W / 2, 90 + i * row, q / max * half, row - 5); });
+  b.bids.forEach(([, q], i) => { g.fillStyle = "rgba(47,213,155,.85)"; g.fillRect(W / 2 - q / max * half, 150 + (14 + i) * row, q / max * half, row - 5); });
+  g.textAlign = "center"; T(g, eu(b.mid), W / 2, 90 + 14 * row + 44, 48); g.textAlign = "left";
+  T(g, "acquisti", 30, H - 26, 28, "#2fd59b", 600); g.textAlign = "right"; T(g, DEMO ? "esempio" : "Coinbase · ogni 30 s", W - 30, H - 26, 26, "#8ea3c8", 600); T(g, "vendite", W - 30, 130, 28, "#ff4d6a", 600);
+}, 1100);
+async function loadBook() { if (DEMO) return bookP.draw(); try { const r = await fetch("api/orderbook?pair=BTC-EUR", { cache: "no-store", headers: room.tokenHdr() }); if (r.ok) book = await r.json(); } catch (e) {} bookP.draw(); }
+loadBook(); setInterval(() => { if (!document.hidden) loadBook(); }, 30000);
+
+const CITIES = [["NEW YORK", "America/New_York", [9.5, 16]], ["LONDRA", "Europe/London", [8, 16.5]], ["TOKYO", "Asia/Tokyo", [9, 15]], ["ROMA", "Europe/Rome", null]];
+const clockP = room.panel(5.2, 1.5, room.X1 - .05, 4.3, 1.8, -Math.PI / 2, (g, W) => {
+  const now = new Date();
+  CITIES.forEach(([c, tz, open], i) => {
+    const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", weekday: "short", hour12: false }).formatToParts(now).map(x => [x.type, x.value]));
+    const h = +p.hour + +p.minute / 60, wk = !["Sat", "Sun"].includes(p.weekday), isOpen = open && wk && h >= open[0] && h < open[1];
+    const x = 30 + i * 270; T(g, c, x, 80, 32, "#8ea3c8", 600); T(g, `${p.hour}:${p.minute}`, x, 180, 88, "#4fd2ff");
+    T(g, open ? (isOpen ? "● borsa aperta" : "○ borsa chiusa") : "● sei qui", x, 250, 28, isOpen || !open ? "#2fd59b" : "#8ea3c8", 600);
+  });
+  g.textAlign = "right"; T(g, "le crypto sono aperte 24/7", W - 30, 300, 24, "#8ea3c8", 500);
+}, 1150);
+setInterval(() => clockP.draw(), 20000);
+
+let fng = null;
+const fngP = room.panel(3.2, 2.6, room.X1 - .05, 3.4, 7.6, -Math.PI / 2, (g, W, H) => {
+  T(g, "PAURA / AVIDITÀ", 30, 58, 38);
+  const f = DEMO ? { value: 62, label: "avidità" } : fng;
+  if (!f || f.value == null) { T(g, f ? "dati non disponibili" : "carico i dati…", 30, H / 2, 34, "#8ea3c8", 600); return; }
+  g.save(); g.translate(W / 2, H - 140);
+  [["#ff4d6a", 0, .25], ["#ffb020", .25, .45], ["#8ea3c8", .45, .55], ["#9bdc6a", .55, .75], ["#2fd59b", .75, 1]].forEach(([c, a, b]) => { g.strokeStyle = c; g.lineWidth = 40; g.beginPath(); g.arc(0, 0, 200, Math.PI * (1 + a), Math.PI * (1 + b)); g.stroke(); });
+  g.rotate(-Math.PI / 2 + f.value / 100 * Math.PI); g.fillStyle = "#fff"; g.fillRect(-6, -185, 12, 185); g.restore();
+  g.textAlign = "center"; T(g, `${f.value} · ${f.label}`, W / 2, H - 50, 46); g.textAlign = "right"; T(g, DEMO ? "esempio" : "alternative.me", W - 24, 58, 22, "#8ea3c8", 500);
+}, 700);
+async function loadFng() { if (DEMO) return fngP.draw(); try { const r = await fetch("api/feargreed", { cache: "no-store", headers: room.tokenHdr() }); if (r.ok) fng = await r.json(); } catch (e) {} fngP.draw(); }
+loadFng(); setInterval(loadFng, 3600000);
+
+// ---------------------------------------------------------------- front wall: board of every strategy, signals log
+const STAGE_COL_CSS = { idea: "#8ea3c8", validating: "#3aa0ff", building: "#4fd2ff", awaiting_approval: "#ffc35a", live: "#2fd59b", scaling: "#2fd59b" };
+const boardP = room.panel(9, 3.8, 1, 3.4, room.Z1 - .05, Math.PI, (g, W, H, w) => {
+  T(g, "BACHECA STRATEGIE", 34, 62, 48, "#4fb3ff");
+  const cols = [34, 640, 900, 1600];
+  ["STRATEGIA", "FASE", "RISULTATI", ""].forEach((h, i) => T(g, h, cols[i], 125, 28, "#8ea3c8", 600));
+  const opps = ((w && w.opps) || []).filter(o => o.stage !== "killed"), killed = (w && w.killed) || [];
+  if (!opps.length && !killed.length) { T(g, "nessuna strategia ancora", 34, 240, 40, "#8ea3c8", 600); return; }
+  const rows = opps.map(o => [o.title || o.id, STAGE_IT[o.stage] || o.stage, o.perf || (o.next ? "→ " + o.next : "—"), STAGE_COL_CSS[o.stage] || "#e6efff"])
+    .concat(killed.slice(-3).reverse().map(t => [t || "—", "Scartata", "—", "#ff4d6a"])).slice(0, 6);
+  rows.forEach((r, j) => { const y = 195 + j * 92; g.fillStyle = j % 2 ? "rgba(86,160,255,.06)" : "rgba(86,160,255,.12)"; g.fillRect(24, y - 56, W - 48, 82);
+    T(g, String(r[0]).slice(0, 30), cols[0], y, 36); T(g, r[1], cols[1], y, 34, r[3], 600); T(g, String(r[2]).slice(0, 52), cols[2], y, 30, "#cfe3ff", 500); });
+}, 1800);
+const sigP = room.panel(4.6, 3.2, -9.5, 3.4, room.Z1 - .05, Math.PI, (g, W, H, w) => {
+  T(g, "REGISTRO SEGNALI", 30, 60, 42, "#ffc35a");
+  const sig = (w && w.signals) || [];
+  if (!sig.length) { T(g, "nessun segnale", 30, 180, 40, "#8ea3c8", 600); T(g, "arrivano solo dalle strategie live", 30, 240, 30, "#8ea3c8", 500); T(g, "che hai approvato tu", 30, 285, 30, "#8ea3c8", 500); }
+  sig.slice(0, 4).forEach((x, i) => { const y = 140 + i * 120, buy = /^COMPRA/.test(x.text);
+    T(g, String(x.ts || "").slice(5, 16).replace("T", " "), 30, y, 26, "#8ea3c8", 600); T(g, x.text.slice(0, 40), 30, y + 46, 30, buy ? "#2fd59b" : "#ff4d6a", 700); });
+  T(g, "i segnali li esegui tu, a mano", 30, H - 26, 24, "#8ea3c8", 500);
+}, 920);
+
+// ---------------------------------------------------------------- data
+function world(w) {
+  setMarkets(w.markets); setOpps(w.opps);
+  boardP.draw(w); sigP.draw(w);
+  globeLight.intensity = room.phase === "working" ? 20 : 12;
+  const k = w.kpi, day = k && k.ai_day_usd ? k.ai_day_usd : 0, used = day ? (k.ai_today_usd || 0) / day : 0;
+  room.drawCells([["RISULTATI REALI", k ? eur(k.revenue_eur) : "—"], ["ULTIMI 30 GIORNI", k ? `${eur(k.revenue_30d)} · ${k.sales_30d || 0} voci` : "—"],
+    ["COSTO AI OGGI", k ? `$${(k.ai_today_usd || 0).toFixed(2)} / $${day.toFixed(2)}` : "—", used > .85 ? "#ff4d6a" : used > .6 ? "#ffb020" : "#2fd59b"],
+    ["STRATEGIE LIVE", k ? String(k.live_products || 0) : "—", "#4fd2ff"]]);
+  $("#kRev").textContent = k ? eur(k.revenue_eur) : "—";
+  $("#kAi").textContent = k ? `$${(k.ai_today_usd || 0).toFixed(2)} / $${day.toFixed(2)}` : "—";
+  $("#kAiBar").style.width = day ? Math.min(100, used * 100) + "%" : "0";
+  const opps = (w.opps || []).filter(o => o.stage !== "killed"), live = opps.filter(o => o.stage === "live" || o.stage === "scaling").length;
+  $("#kStrat").textContent = `${opps.length} in prova · ${live} live`;
+  $("#kApr").textContent = `${w.pending_approvals || 0} · ${(w.killed || []).length}`;
+}
+const SAMPLE_OPPS = [["o1", "Trend BTC 1d", "live"], ["o2", "Rotazione momentum", "building"], ["o3", "DCA intelligente BTC", "building"], ["o4", "ETH mean reversion 6h", "validating"],
+  ["o5", "Breakout SOL", "idea"], ["o6", "Filtro volatilità BTC", "validating"], ["o7", "Rimbalzi BTC 1h", "idea"]].map(([id, title, stage]) => ({ id, title, stage, perf: "esempio", next: "esempio" }));
+function demo(t) {
+  t %= 40; const who = AGENTS[1 + Math.floor(t / 7) % 6][0];
+  return { phase: t < 36 ? "working" : "idle", agents: { [who]: { status: "working", task: "esempio: analizza BTC ed ETH" } },
+    world: { opps: SAMPLE_OPPS, killed: ["Scalping 1 minuto"], signals: [{ ts: "2026-10-05T01:17", text: "COMPRA · esempio: porta BTC al 60%" }], pending_approvals: 1, markets: [{ name: "BTC trend" }, { name: "ETH" }, { name: "SOL breakout" }],
+      kpi: { revenue_eur: 0, revenue_30d: 0, sales_30d: 0, ai_today_usd: .42, ai_day_usd: 3, live_products: 1 } },
+    report: { headline: "Esempio: due strategie in paper trading, una in backtest.", cycle: 12 }, events: [{ ts: "2026-10-05T01:17", agent: "ceo", msg: "esempio: ciclo avviato" }] };
+}
+room.tickers.push((dt, t) => {
+  sphere.rotation.y += dt * .12; wire.rotation.y -= dt * .05; orbits[0].rotation.z += dt * .3; orbits[1].rotation.z -= dt * .22;
+  drawDashes(t * (room.phase === "working" ? 3 : 1));
+  for (const b of Object.values(blocks)) { if (b.userData.target) b.position.lerp(b.userData.target, .08); b.rotation.y += dt * .6; b.position.y = (b.userData.target ? b.userData.target.y : .6) + Math.sin(t * 2 + b.id) * .05; }
+});
+room.start();
+</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+name: Crypto cycle
+# Team trading: research, backtest, paper trading, go-live proposals. Night only (Italian time),
+# so it doesn't eat the daytime Claude quota. Prices come from public APIs (Coinbase, Kraken), no keys.
+# Cron is UTC: 22:17, 00:17, 02:17, 04:17 UTC = 00:17-06:17 in Italy (summer), 23:17-05:17 (winter).
+# Secrets: add any provider keys you want; the router discovers configured keys automatically.
+# Variables: MM_FREE_ONLY=true restricts routing to configured free-provider families.
+on:
+  schedule:
+    - cron: "17 22,0,2,4 * * *"
+  workflow_dispatch:
+    inputs:
+      auto:
+        description: "Avvio automatico dalla plancia all'orario previsto (non toccare)"
+        required: false
+      note:
+        description: "Istruzione extra per questo ciclo (opzionale)"
+        required: false
+
+permissions:
+  actions: read
+  contents: write
+  issues: write
+
+concurrency:
+  group: mm-state
+  cancel-in-progress: false
+
+jobs:
+  gate:  # a cron run is a backup of the panel's autostart: skip it if this workflow already started recently
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.g.outputs.go }}
+    steps:
+      - id: g
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          go=1
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            since=$(date -u -d "-90 minutes" +%Y-%m-%dT%H:%M:%SZ)
+            n=$(gh api "repos/${{ github.repository }}/actions/workflows/crypto-cycle.yml/runs?per_page=10" \
+                  --jq "[.workflow_runs[] | select(.id != ${{ github.run_id }} and .created_at >= \"$since\")] | length" || echo 0)
+            [ "${n:-0}" -gt 0 ] && go=0 && echo "già avviato negli ultimi 90 minuti: salto"
+          fi
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+  cycle:
+    needs: gate
+    if: needs.gate.outputs.go == '1' && ((github.event_name != 'schedule' && github.event.inputs.auto != '1') || vars.MM_CRON_ENABLED != 'false')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Install Claude Code (main AI engine; the orchestrator stays as fallback)
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Verify Python
+        run: python3 --version
+      - name: Restore orchestrator learning state
+        uses: actions/cache@v4
+        with:
+          path: .crypto-machine/orchestrator_state.json
+          key: mm-orchestrator-${{ github.run_id }}
+          restore-keys: |
+            mm-orchestrator-
+      - name: Apply pending dashboard commands
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/apply_issues.py apply
+      - name: Run approved actions (go-live / stop of strategies, site pages, LinkedIn)
+        env:
+          MM_SITE_URL: ${{ vars.MM_SITE_URL }}
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}  # set by the panel (Collega LinkedIn); without it LinkedIn posts wait
+          LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+        run: python3 scripts/actions.py run-approved
+      - name: Site traffic from the online panel (visits, clicks; no cookies)
+        env:
+          MM_TRAFFIC_URL: ${{ secrets.MM_TRAFFIC_URL }}  # saved by the panel itself
+          MM_TRAFFIC_KEY: ${{ secrets.MM_TRAFFIC_KEY }}
+        run: python3 scripts/traffic_sync.py
+      - name: Tools for backtest charts
+        run: python3 -m pip install --quiet --user --break-system-packages pillow || echo "Pillow non installato - backtest senza grafici"
+      - name: Add manual note as directive
+        if: github.event.inputs.note != '' && github.event.inputs.note != null
+        env:
+          NOTE: ${{ github.event.inputs.note }}
+        run: python3 engine/mm.py enqueue "$(python3 -c 'import json,os;print(json.dumps({"op":"directive_add","args":{"text":os.environ["NOTE"]}}))')"
+      - name: Run one cycle
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN || secrets.CLAUDE_CODE_OAUTH_TOKEN2 }}
+          MM_ENGINE: ${{ vars.MM_ENGINE || 'auto' }}  # auto = Claude if its token is set, else the orchestrator
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          MM_MODEL: ${{ vars.MM_MODEL || 'sonnet' }}
+          MM_FREE_ONLY: ${{ vars.MM_FREE_ONLY || 'false' }}
+          MM_PROVIDER_ORDER: ${{ vars.MM_PROVIDER_ORDER || 'groq,anthropic,openai,gemini,cerebras,openrouter,together,mistral,deepseek,xai' }}
+          MM_PERSIST_STATE: 'true'
+          MM_STATE_FILE: .crypto-machine/orchestrator_state.json
+          MM_LIVE_TOKEN: ${{ github.token }}  # only for the live 3D office feed; cycle.sh hides it from the agents
+          MM_FORCE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.auto != '1' && '1' || '' }}  # manual runs never skip; automatic ones behave like the cron
+        run: |
+          set -o pipefail
+          bash scripts/cycle.sh | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Telegram alerts (signals, things for you, skipped or failed cycles; optional)
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}  # optional: without it the step does nothing
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}  # optional: found from the /start message
+          MM_SITE_URL: ${{ vars.MM_SITE_URL }}
+        run: python3 scripts/telegram.py
+      - name: Commit state and products
+        id: commit
+        if: always()
+        run: |
+          git config user.name "crypto-machine[bot]"
+          git config user.email "crypto-machine@users.noreply.github.com"
+          git add -A state products site
+          git diff --cached --quiet && exit 0
+          git commit -m "mm: ciclo $(date -u +%FT%TZ)"
+          ok=0; for i in 1 2 3; do git pull --rebase -X theirs && git push && { ok=1; break; }; sleep $((i*3)); done; [ "$ok" = 1 ]
+      - name: Reply and close applied command issues
+        if: always() && steps.commit.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/apply_issues.py close
+      - name: Notify the owner only if something waits for them (one self-closing issue)
+        if: always() && steps.commit.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          MM_SITE_URL: ${{ vars.MM_SITE_URL }}
+        run: python3 scripts/notify.py
