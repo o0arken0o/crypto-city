@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="city" x2="0" y2="1">
+      <stop stop-color="#123957"/>
+      <stop offset="1" stop-color="#061525"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="92" fill="url(#city)"/>
+  <rect x="54" y="54" width="404" height="404" rx="64" fill="none" stroke="#59c3e3" stroke-width="7"/>
+  <path d="M112 392v-57h40v-44h46v101h37v-79h52v79h35V269h53v123h25" fill="none" stroke="#4a94b4" stroke-width="11" stroke-linejoin="round"/>
+  <text x="256" y="271" text-anchor="middle" font-family="DejaVu Sans" font-size="161" font-weight="700" fill="#d9f4fb">CC</text>
+</svg>

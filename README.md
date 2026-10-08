@@ -1,6 +1,6 @@
 # Crypto City
 
-La città 3D di Crypto Machine, con il progetto completo e un avvio diretto per Windows.
+Crypto City è un progetto completo con una città 3D e un avvio diretto per Windows.
 Esplora i 12 edifici e apri le sale per vedere stato, attività, strategie, grafici e rischio dai dati del progetto.
 
 ## Avvio su Windows
@@ -27,6 +27,19 @@ Quant Analyst · Risk Manager · Portfolio Manager · Yield Agent · Chief Tradi
 
 Le sale leggono le API del motore. Valori mancanti o servizi non raggiungibili vengono indicati chiaramente;
 non vengono sostituiti con guadagni o attività inventati. I sei trader sono viste delle strategie per asset.
+
+## Interfaccia di Crypto City
+
+Il menu contiene **Città, Strategie, Conferme, Agenti, Portafoglio, Mercati e Impostazioni**.
+Le vecchie voci Sala trading, Sala rendite, Casa e i collegamenti social sono stati rimossi dall'interfaccia.
+La configurazione dei provider AI necessari agli agenti è disponibile nelle **Impostazioni**.
+Nome, icona e collegamenti dell'app installabile sono quelli di Crypto City.
+
+Per aggiornare una copia già avviata senza sostituirne i dati, scarica
+[Crypto-City-INTERFACCIA.zip](downloads/Crypto-City-INTERFACCIA.zip), scegli **Estrai tutto**
+e copia la sua cartella `dashboard` dentro la cartella del tuo progetto, accettando la
+sostituzione dei file. Poi premi **Ctrl+F5** nella città aperta nel browser.
+La ZIP contiene solo nove file dell'interfaccia; non contiene motore, server o stato.
 
 ## Dati e sicurezza
 
@@ -65,4 +78,5 @@ python3 tests/browser_city.py
 ```
 
 La mappa dei componenti riusati e delle route è in [CRYPTO_CITY_ARCHITECTURE.md](docs/CRYPTO_CITY_ARCHITECTURE.md).
-La provenienza e gli hash dei componenti conservati sono in [CRYPTO_CITY_SOURCE_SNAPSHOT.json](docs/CRYPTO_CITY_SOURCE_SNAPSHOT.json).
+La provenienza e gli hash della versione di partenza sono in [CRYPTO_CITY_SOURCE_SNAPSHOT.json](docs/CRYPTO_CITY_SOURCE_SNAPSHOT.json).
+La mappa documenta anche i file dell'interfaccia aggiornati rispetto a quella versione.

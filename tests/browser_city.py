@@ -268,6 +268,56 @@ class CryptoCityBrowserTest(unittest.TestCase):
                 self.assertEqual(response.status, 200)
                 self.assertIn("text/html", response.headers.get("content-type", ""))
 
+    def test_city_only_desktop_navigation_and_agent_configuration(self):
+        self.load_city()
+        self.page.wait_for_function("document.querySelector('#homeAgents [data-ag]') !== null")
+        self.assertEqual(self.page.title(), "Crypto City")
+        self.assertEqual(self.page.locator(".top .logo").inner_text(), "CC")
+        self.assertTrue(self.page.locator(".top h1").inner_text().startswith("Crypto City"))
+        expected = ["city", "prodotti", "dafare", "team", "soldi", "mercati", "impostazioni"]
+        self.assertEqual(self.page.locator("#side [data-view]").evaluate_all(
+            "buttons=>buttons.map(button=>button.dataset.view)"), expected)
+        self.assertEqual(self.page.locator("#side a").count(), 0)
+        self.assertEqual(self.page.locator('a[href="office.html"],a[href="sales.html"],a[href="sims.html"]').count(), 0)
+        for pane in expected:
+            with self.subTest(pane=pane):
+                self.page.locator('#side [data-view="' + pane + '"]').click()
+                self.page.locator('[data-pane="' + pane + '"]').wait_for(state="visible")
+        settings = self.page.locator('[data-pane="impostazioni"]')
+        self.assertEqual(settings.locator('a[href="ai.html"]').count(), 1)
+        self.assertNotIn("LinkedIn", settings.inner_text())
+        self.assertEqual(self.page.locator("#btnSocial,#liBox,#trafTable,#homeComp,#cityRoomLegacy").count(), 0)
+        self.page.locator('#side [data-view="team"]').click()
+        for name in ("social-lead", "social-writer", "visual-designer"):
+            self.assertEqual(self.page.locator('#homeAgents [data-ag="' + name + '"]').count(), 0)
+        self.page.locator("#goTop").click()
+        self.page.locator("#sheetGo").wait_for(state="visible")
+        self.assertIn("Crypto City", self.page.locator("#sheetGo h3").text_content())
+        self.assertEqual(self.page.locator("#btnCycle,#btnGrowth,#btnSys").count(), 3)
+
+    def test_mobile_city_menu_and_owner_confirmation_navigation(self):
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.load_city()
+        self.assertEqual(self.page.locator("#bnav [data-view]").evaluate_all(
+            "buttons=>buttons.map(button=>button.dataset.view)"), ["city", "prodotti", "dafare"])
+        for pane in ("team", "soldi", "mercati", "impostazioni"):
+            self.page.locator('#bnav [data-sheet="menu"]').click()
+            self.page.locator("#sheetMenu").wait_for(state="visible")
+            self.assertEqual(self.page.locator("#sheetMenu a").count(), 0)
+            self.page.locator('#sheetMenu [data-view="' + pane + '"]').click()
+            self.page.locator('[data-pane="' + pane + '"]').wait_for(state="visible")
+            self.page.locator("#sheetMenu").wait_for(state="hidden")
+        self.page.locator('#bnav [data-view="city"]').click()
+        self.open_room("risk")
+        self.page.locator("#cityRoomApprovals").click()
+        self.page.locator("#cityRoom").wait_for(state="hidden")
+        self.page.locator('[data-pane="dafare"]').wait_for(state="visible")
+        self.assertTrue(self.page.locator("#approvalsBox").is_visible())
+        self.page.locator('#bnav [data-sheet="go"]').click()
+        self.page.locator("#sheetGo").wait_for(state="visible")
+        self.assertEqual(self.page.locator("#btnSocial").count(), 0)
+        self.assertLessEqual(self.page.evaluate("document.documentElement.scrollWidth"), 392)
+
     def test_room_and_terminal_charts_work_without_external_charts_module(self):
         # Older Windows checkouts have neither charts.js nor its server route.
         # A valid market response must still produce both charts without a

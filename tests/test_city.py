@@ -56,11 +56,26 @@ class CityMarkupTest(unittest.TestCase):
         city = next(attrs for _, attrs in self.html.elements if attrs.get("data-pane") == "city")
         self.assertNotIn("hidden", city, "Crypto City must be the initial home before JavaScript loads")
 
-    def test_existing_room_links_remain_available(self):
+    def test_city_navigation_drops_old_rooms_but_keeps_direct_routes(self):
         hrefs = {attrs.get("href") for _, attrs in self.html.elements}
-        for route in ("office.html", "sales.html", "ai.html", "sims.html"):
-            self.assertTrue(any(value and value.lstrip("./") == route for value in hrefs), route)
+        for route in ("office.html", "sales.html", "sims.html"):
+            self.assertFalse(any(value and value.lstrip("./") == route for value in hrefs), route)
             self.assertTrue((DASHBOARD / route).is_file())
+        self.assertIn("ai.html", hrefs, "Agent provider configuration remains useful in Settings")
+        ids = {attrs.get("id") for _, attrs in self.html.elements}
+        for obsolete in ("cityRoomLegacy", "btnSocial", "liBox", "trafTable", "homeComp"):
+            self.assertNotIn(obsolete, ids)
+
+    def test_installable_app_uses_city_branding_and_shortcuts(self):
+        manifest = json.loads((DASHBOARD / "manifest.webmanifest").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["name"], "Crypto City")
+        self.assertEqual(manifest["short_name"], "Crypto City")
+        self.assertEqual({item["url"] for item in manifest["shortcuts"]},
+                         {"/plancia#city", "/plancia#dafare", "/plancia#city/risk"})
+        for name in ("index.html", "ai.html", "sw.js"):
+            source = (DASHBOARD / name).read_text(encoding="utf-8")
+            self.assertIn("Crypto City", source)
+            self.assertNotIn("Crypto Machine", source)
 
     def test_city_scripts_are_read_only(self):
         scripts = [s for s in self.html.scripts if s["attrs"].get("id", "").startswith("city-")]

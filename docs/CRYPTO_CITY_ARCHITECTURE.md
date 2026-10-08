@@ -122,7 +122,7 @@ il server reale. La mancanza di browser/Playwright produce skip espliciti, non u
 Questi strumenti sono dipendenze di sviluppo, non aggiunte alle dipendenze del backend.
 I workflow GitHub sono invariati.
 
-Verifica corrente: 160 test della suite standard eseguiti, 158 superati e 2 test
+Verifica della prima versione della città: 160 test della suite standard eseguiti, 158 superati e 2 test
 immagini opzionali saltati per assenza di Pillow. Tutti i 14 scenari Playwright superati: WebGL
 reale, raycast, dodici sale, mobile, aree touch, route/hash e browser back, errori API/moduli,
 autenticazione, XSS e perdita del contesto WebGL. Nessun errore JavaScript non gestito e nessuna
@@ -196,5 +196,55 @@ launcher includono un avvio reale in una cartella temporanea con spazi e una
 sentinella nello stato, provando che la copia serve i propri dati. Il setup cloud
 con venv dedicato è stato installato e ripetuto; startup, pagina esatta, API stato,
 route precedenti e Three.js sono stati verificati con stato runtime esterno.
-I 122 hash della provenienza restano identici; il checkout originale è pulito.
+Alla creazione della copia completa, i 122 hash della provenienza erano identici e il checkout originale era pulito.
 L'esecuzione nativa del nuovo comando Windows resta da verificare sul PC.
+
+## Pulizia dell'interfaccia di Crypto City
+
+L'interfaccia e l'app installabile ora usano il nome **Crypto City** e un'icona con
+la città e le iniziali CC. Il menu principale contiene Città, Strategie, Conferme,
+Agenti, Portafoglio, Mercati e Impostazioni; la navigazione mobile offre le stesse
+sezioni. Le dodici sale restano la vista iniziale.
+
+Sono stati rimossi dall'interfaccia i collegamenti Sala trading, Sala rendite e
+Casa, il ciclo social, LinkedIn e i pannelli promozionali del progetto precedente.
+Gli agenti social non compaiono nelle viste degli agenti di Crypto City. La
+configurazione AI utile agli agenti resta raggiungibile dalle Impostazioni.
+Le Conferme continuano a usare i comandi esistenti per le decisioni del proprietario.
+
+Questa pulizia riguarda la presentazione. Le route dirette delle pagine precedenti
+(`office.html`, `sales.html`, `sims.html`, `ai.html`) e gli hash operativi storici
+restano disponibili per compatibilità, anche quando il menu non li propone più.
+Senza JavaScript, la home indica che occorre attivarlo per aprire le sale.
+Motore, API, integrazioni, stato, strategie, audit, policy e workflow restano intatti;
+gli ordini reali continuano a richiedere l'approvazione esplicita del proprietario.
+
+`CRYPTO_CITY_SOURCE_SNAPSHOT.json` conserva la baseline originale, senza riscriverne
+gli hash. Rispetto ai suoi 122 percorsi, **114 restano identici byte per byte** e
+otto differiscono per le modifiche autorizzate all'interfaccia:
+
+- `dashboard/index.html` e `dashboard/ai.html`;
+- `dashboard/manifest.webmanifest` e `dashboard/sw.js`;
+- `dashboard/icon-192.png`, `dashboard/icon-512.png`,
+  `dashboard/icon-maskable-512.png` e `dashboard/apple-touch-icon.png`.
+
+Il nuovo `dashboard/city-icon.svg` è la sorgente dell'icona. Il nome della cache
+del service worker cambia per consentire all'app di caricare l'interfaccia aggiornata;
+le API continuano a essere escluse dalla cache. I risultati di verifica riportati
+nelle sezioni precedenti documentano le versioni precedenti alla pulizia.
+
+Verifica della pulizia: 179 test unitari eseguiti, 177 superati e 2 saltati per
+Pillow facoltativo; tutti i 16 scenari browser superati. I due nuovi scenari
+verificano navigazione desktop, esclusione degli agenti social, configurazione AI,
+menu mobile e accesso alle conferme del proprietario senza inviare comandi.
+Le risposte mercato e attività dei test browser sono fixture dichiarate;
+lo stato usa l'API autenticata del server reale. Nessun errore JavaScript non
+gestito e nessuna richiesta di scrittura durante la navigazione.
+
+`downloads/Crypto-City-INTERFACCIA.zip` contiene nove file frontend e le istruzioni.
+CRC, elenco dei file e identità dei payload rispetto ai sorgenti sono verificati.
+Una prova di applicazione con stato personalizzato conserva byte per byte stato,
+motore, server, policy e launcher. I quattro pacchetti precedenti includono la
+pagina aggiornata, con installatori e altri file invariati. La copia originale
+di Crypto Machine resta pulita. L'applicazione della nuova ZIP sul PC dell'utente
+deve ancora essere eseguita.
